@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:kredipal/constant/app_images.dart';
 import 'package:kredipal/widgets/custom_header.dart';
+import 'package:widget_circular_animator/widget_circular_animator.dart';
 import '../constant/app_color.dart';
+import '../widgets/profile_option_tile.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -11,59 +13,98 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColor.primaryColor.withOpacity(0.03),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          customHeader('My Profile'),
-          const SizedBox(height: 30),
-          const SizedBox(height: 20),
-
-          // Modern Profile Card
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            padding: const EdgeInsets.all(20),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                colors: [AppColor.appBarColor, Colors.teal.shade300],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.shade300,
-                  blurRadius: 12,
-                  offset: const Offset(0, 8),
+                  color: Colors.teal.shade100,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: const Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CircleAvatar(
+                // Profile Image
+                const CircleAvatar(
                   radius: 40,
-                  backgroundImage: AssetImage(AppImages.loginImg),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Dillip Kumar Pradhan",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 6),
-                      Text("Flutter Developer", style: TextStyle(color: Colors.black54)),
-                      SizedBox(height: 4),
-                      Text("7064888156", style: TextStyle(color: Colors.black45)),
-                    ],
+                  backgroundImage: NetworkImage(
+                    'https://images.unsplash.com/photo-1598618356794-eb1720430eb4?ixlib=rb-1.2.1&auto=format&fit=crop&w=870&q=80',
                   ),
+                ),
+                const SizedBox(height: 16),
+                // Name
+                const Text(
+                  'Shamim Miah',
+                  style: TextStyle(
+                    fontSize: 22,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                // Designation
+                Text(
+                  'Project Manager',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Contact Info
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.email, color: Colors.white70, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      'shamimmiah@gmail.com',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.phone, color: Colors.white70, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      '+91 9876543210',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-
           const SizedBox(height: 30),
-
-          // Options
+          // Profile and Options
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
+
+                const SizedBox(height: 20),
                 OptionTile(
                   icon: Icons.receipt_long,
                   title: "Salary Slip",
@@ -91,65 +132,11 @@ class ProfileScreen extends StatelessWidget {
                   iconColor: Colors.red,
                   textColor: Colors.red,
                 ),
+                const SizedBox(height: 30), // for bottom padding
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class OptionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-  final Color? iconColor;
-  final Color? textColor;
-
-  const OptionTile({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.iconColor,
-    this.textColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade200,
-              blurRadius: 10,
-              offset: const Offset(0, 6),
-            )
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor ?? AppColor.primaryColor, size: 24),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: textColor ?? Colors.black87,
-                ),
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-          ],
-        ),
       ),
     );
   }

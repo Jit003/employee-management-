@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kredipal/controller/current_time_controller.dart';
+import 'package:kredipal/controller/voice%20controller.dart';
 import 'package:kredipal/widgets/custom_header.dart';
 import 'package:kredipal/controller/animation_controller.dart';
 
@@ -10,11 +11,13 @@ class AttendanceScreen extends StatelessWidget {
   AttendanceScreen({super.key});
 
   final TimeController timeController = Get.put(TimeController());
+  final VoiceController voiceController = Get.put(VoiceController());
   final PulseAnimationController pulseController = Get.put(PulseAnimationController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       body: Column(
         children: [
           // Gradient Header
@@ -29,6 +32,16 @@ class AttendanceScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  TextButton(
+                  onPressed: () {
+                    if (!voiceController.isListening.value) {
+                      voiceController.startListening();
+                    } else {
+                      voiceController.stopListening();
+                    }
+                  },
+
+                  child: Text('Speak')),
                   const Text(
                     "Your Attendance",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -64,7 +77,7 @@ class AttendanceScreen extends StatelessWidget {
                         child: buildStatusCircle(
                           color: Colors.red,
                           icon: Icons.logout,
-                          label: "Check-Out",
+                          label: "Check-Out ",
                         ),
                       );
                     },

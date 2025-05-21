@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
+import 'package:kredipal/views/lead_details_screen.dart';
 import 'package:kredipal/widgets/custom_header.dart';
-
 import '../controller/allleads_controller.dart';
 
 class AllLeadsScreen extends StatelessWidget {
@@ -15,8 +15,6 @@ class AllLeadsScreen extends StatelessWidget {
     return Column(
       children: [
         customHeader('All Leads List'),
-
-        // Reactive leads list
         Expanded(
           child: Obx(() => ListView.builder(
             itemCount: leadsController.leads.length,
@@ -25,7 +23,7 @@ class AllLeadsScreen extends StatelessWidget {
               return Slidable(
                 key: ValueKey(lead['name']),
 
-                // Slide Right to Delete
+                // Swipe to delete
                 startActionPane: ActionPane(
                   motion: const ScrollMotion(),
                   dismissible: DismissiblePane(
@@ -37,46 +35,94 @@ class AllLeadsScreen extends StatelessWidget {
                   ),
                   children: [
                     SlidableAction(
-                      onPressed: (_) =>
-                          leadsController.deleteLead(index),
-                      backgroundColor: Colors.red,
+                      onPressed: (_) => leadsController.deleteLead(index),
+                      backgroundColor: Colors.red.shade400,
                       foregroundColor: Colors.white,
-                      icon: Icons.delete,
+                      icon: Icons.delete_outline,
                       label: 'Delete',
                     ),
                   ],
                 ),
 
-                // Slide Left to Complete/Not Complete
+                // Swipe to update status
                 endActionPane: ActionPane(
                   motion: const ScrollMotion(),
                   children: [
                     SlidableAction(
                       onPressed: (_) =>
                           leadsController.markAsCompleted(index),
-                      backgroundColor: Colors.green,
+                      backgroundColor: Colors.green.shade600,
                       foregroundColor: Colors.white,
-                      icon: Icons.check,
+                      icon: Icons.check_circle_outline,
                       label: 'Completed',
                     ),
                     SlidableAction(
                       onPressed: (_) =>
                           leadsController.markAsNotCompleted(index),
-                      backgroundColor: Colors.orange,
+                      backgroundColor: Colors.orange.shade400,
                       foregroundColor: Colors.white,
-                      icon: Icons.close,
-                      label: 'Not Completed',
+                      icon: Icons.cancel_outlined,
+                      label: 'Pending',
                     ),
                   ],
                 ),
 
-                child: Card(
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
-                  child: ListTile(
-                    title: Text(lead['name'] ?? ''),
-                    subtitle: Text("Status: ${lead['status']}"),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                child: GestureDetector(
+                  onTap: () => Get.to(() => LeadDetailsScreen(lead: lead)),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 6,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                      border: Border.all(color: Colors.teal.shade100),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: Colors.teal.shade100,
+                          child: const Icon(Icons.person, color: Colors.red),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                lead['name'] ?? '',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Status: ${lead['status']}",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: lead['status'] == 'Completed'
+                                      ? Colors.green
+                                      : Colors.orange,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios,
+                            size: 16, color: Colors.teal),
+                      ],
+                    ),
                   ),
                 ),
               );
