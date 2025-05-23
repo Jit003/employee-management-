@@ -9,8 +9,8 @@ import '../controller/bottom_nav_controller.dart';
 import 'bottom_nav_bar.dart';
 import 'dashboard_screen.dart';
 
-class MainScaffold extends StatelessWidget {
-  MainScaffold({super.key});
+class HomeScreen extends StatelessWidget {
+  HomeScreen({super.key});
 
   final BottomNavController controller = Get.put(BottomNavController());
 
@@ -18,7 +18,7 @@ class MainScaffold extends StatelessWidget {
     const DashboardScreen(),
     AllLeadsScreen(),
     AttendanceScreen(),
-    const ProfileScreen(),
+     ProfileScreen(),
 
   ];
 

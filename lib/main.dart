@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kredipal/routes/app_pages.dart';
+import 'package:kredipal/routes/app_routes.dart';
 import 'package:kredipal/views/splash_screen.dart';
 
 void main() {
@@ -13,7 +15,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+      initialRoute: AppRoutes.splash,
+      getPages: AppPages.appPages,
     );
   }
 }

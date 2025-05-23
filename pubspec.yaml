@@ -42,6 +42,7 @@ dependencies:
   widget_circular_animator: ^1.0.0
   flutter_tts: ^4.2.2
   speech_to_text: ^7.0.0
+  video_player: ^2.9.5
 
 dev_dependencies:
   flutter_test:

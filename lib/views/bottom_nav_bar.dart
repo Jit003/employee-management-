@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kredipal/routes/app_routes.dart';
 import 'package:kredipal/views/add_leads.dart';
 import '../constant/app_color.dart';
 import '../controller/bottom_nav_controller.dart';
@@ -53,7 +54,7 @@ class CustomBottomNavBar extends StatelessWidget {
                         width: 60,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(30),
-                          color: isSelected ? Colors.red : Colors.transparent,
+                          color: isSelected ? AppColor.btnColor : Colors.transparent,
                         ),
                         child: Icon(
                           icons[index],
@@ -85,14 +86,13 @@ class CustomBottomNavBar extends StatelessWidget {
           child: Center(
             child: GestureDetector(
               onTap: () {
-                print('Custom FAB pressed');
-                Get.to(()=>const AddLeadsPage());
+                Get.toNamed(AppRoutes.addLead);
               },
               child: Container(
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.red, // FAB background color
+                  color: AppColor.btnColor, // FAB background color
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(

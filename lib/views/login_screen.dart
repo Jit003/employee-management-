@@ -10,10 +10,10 @@ import '../widgets/custom_text_field.dart';
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});
 
-  final LoginController controller = Get.put(LoginController());
 
   @override
   Widget build(BuildContext context) {
+    final LoginController controller = Get.find<LoginController>();
     return Scaffold(
       resizeToAvoidBottomInset: true, // this helps shift UI when keyboard appears
       body: Container(

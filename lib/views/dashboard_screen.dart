@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:kredipal/constant/app_color.dart';
+import 'package:kredipal/routes/app_routes.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -22,11 +24,7 @@ class DashboardScreen extends StatelessWidget {
                   // Gradient Background
                   Container(
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColor.appBarColor, Colors.teal.shade300],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: AppColor.appBarColor
                     ),
                   ),
                   // Optional: Blur/Overlay for effect
@@ -34,21 +32,21 @@ class DashboardScreen extends StatelessWidget {
                     color: Colors.black.withOpacity(0.2),
                   ),
                   // App Bar Content
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 60, 16, 20),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 60, 16, 20),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Profile Image
-                        CircleAvatar(
+                        const CircleAvatar(
                           radius: 30,
                           backgroundImage: NetworkImage(
                             'https://i.pravatar.cc/100?img=4', // Replace with your asset or network image
                           ),
                         ),
-                        SizedBox(width: 16),
+                        const SizedBox(width: 16),
                         // Welcome Texts
-                        Expanded(
+                        const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -72,7 +70,14 @@ class DashboardScreen extends StatelessWidget {
                           ),
                         ),
                         // Notification Icon
-                        Icon(Icons.notifications_none, color: Colors.white),
+                        IconButton(
+                            onPressed: () {
+                              Get.toNamed(AppRoutes.notification);
+                            },
+                            icon: const Icon(
+                              Icons.notifications,
+                              color: Colors.white,
+                            ))
                       ],
                     ),
                   ),
@@ -177,8 +182,6 @@ class DashboardScreen extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 30),
-
-
                 ],
               ),
             ),

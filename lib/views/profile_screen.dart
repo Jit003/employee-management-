@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:kredipal/constant/app_images.dart';
-import 'package:kredipal/widgets/custom_header.dart';
-import 'package:widget_circular_animator/widget_circular_animator.dart';
+import 'package:get/get.dart';
+import 'package:kredipal/routes/app_routes.dart';
 import '../constant/app_color.dart';
+import '../controller/login-controller.dart';
 import '../widgets/profile_option_tile.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -19,11 +19,7 @@ class ProfileScreen extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColor.appBarColor, Colors.teal.shade300],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+             color: AppColor.appBarColor,
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
@@ -110,25 +106,32 @@ class ProfileScreen extends StatelessWidget {
                   title: "Salary Slip",
                   onTap: () {
                     // Navigate or show dialog
+                    Get.toNamed(AppRoutes.salarySlip);
                   },
                 ),
                 const SizedBox(height: 16),
                 OptionTile(
                   icon: Icons.history,
                   title: "Leave History",
-                  onTap: () {},
+                  onTap: () {
+                    Get.toNamed(AppRoutes.leaveHistory);
+                  },
                 ),
                 const SizedBox(height: 16),
                 OptionTile(
                   icon: Icons.edit,
                   title: "Edit Profile",
-                  onTap: () {},
+                  onTap: () {
+                    Get.toNamed(AppRoutes.editProfile);
+                  },
                 ),
                 const SizedBox(height: 16),
                 OptionTile(
                   icon: Icons.logout,
                   title: "Logout",
-                  onTap: () {},
+                  onTap: () {
+                    Get.offAllNamed(AppRoutes.login);
+                  },
                   iconColor: Colors.red,
                   textColor: Colors.red,
                 ),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:kredipal/constant/app_color.dart';
 import 'package:kredipal/widgets/custom_button.dart';
 import 'package:kredipal/widgets/custom_text_field_addlead.dart';
+
+import '../routes/app_routes.dart';
 
 class AddLeadsPage extends StatelessWidget {
   const AddLeadsPage({super.key});
@@ -31,7 +34,9 @@ class AddLeadsPage extends StatelessWidget {
             buildTextField(label: 'Remarks', icon: Icons.note, maxLines: 3),
 
             const SizedBox(height: 25),
-            CustomButton(text: 'Save Lead', onPressed: (){})
+            CustomButton(text: 'Save Lead', onPressed: (){
+              Get.toNamed(AppRoutes.leadSavedSuccess);
+            })
           ],
         ),
       ),

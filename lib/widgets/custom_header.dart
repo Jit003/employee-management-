@@ -9,11 +9,7 @@ Widget customHeader(String text, [String? time]) {
     width: double.infinity,
     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
     decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: [AppColor.appBarColor, Colors.teal.shade300],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
+     color: AppColor.appBarColor,
       borderRadius: const BorderRadius.only(
         bottomLeft: Radius.circular(24),
         bottomRight: Radius.circular(24),

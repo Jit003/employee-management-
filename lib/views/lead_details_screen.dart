@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:kredipal/constant/app_color.dart';
 import 'package:kredipal/widgets/custom_button.dart';
 import 'package:widget_circular_animator/widget_circular_animator.dart';
-
-import '../constant/app_images.dart';
+import 'package:get/get.dart';
 
 class LeadDetailsScreen extends StatelessWidget {
-  final Map<String, dynamic> lead;
+  final Map<String, dynamic> lead = Get.arguments;
 
-  const LeadDetailsScreen({super.key, required this.lead});
+   LeadDetailsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
