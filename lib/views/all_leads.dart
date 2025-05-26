@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:kredipal/constant/app_color.dart';
-import 'package:kredipal/views/lead_details_screen.dart';
 import 'package:kredipal/widgets/custom_header.dart';
 import '../controller/allleads_controller.dart';
 import '../routes/app_routes.dart';
@@ -17,11 +16,42 @@ class AllLeadsScreen extends StatelessWidget {
     return Column(
       children: [
         customHeader('All Leads List'),
+        // Filter Dropdown
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Obx(() {
+            return DropdownButtonFormField<String>(
+              value: leadsController.selectedStatus.value,
+              items: ['All', 'Completed', 'Pending']
+                  .map((status) => DropdownMenuItem(
+                        value: status,
+                        child: Text(status),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  leadsController.selectedStatus.value = value;
+                } else {
+                  'No Data Found';
+                }
+              },
+              decoration: InputDecoration(
+                labelText: 'Filter by Status',
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+            );
+          }),
+        ),
+
         Expanded(
-          child: Obx(() => ListView.builder(
-                itemCount: leadsController.leads.length,
+          child: Obx(() =>
+
+              ListView.builder(
+                itemCount: leadsController.filteredLeads.length,
                 itemBuilder: (context, index) {
-                  final lead = leadsController.leads[index];
+                  final lead = leadsController.filteredLeads[index];
                   return Slidable(
                     key: ValueKey(lead['name']),
 

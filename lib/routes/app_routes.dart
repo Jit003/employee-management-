@@ -13,4 +13,5 @@ class AppRoutes {
   static const String salarySlip = '/salarySlipScreen';
   static const String leaveHistory = '/leaveHistoryScreen';
   static const String editProfile = '/editProfileScreen';
+  static const String attendanceHistory = '/attendanceHistoryScreen';
 }

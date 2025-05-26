@@ -6,6 +6,16 @@ class LeadsController extends GetxController {
     {'name': 'Jane Smith', 'status': 'Pending'},
     {'name': 'Alex Johnson', 'status': 'Pending'},
   ].obs;
+  var selectedStatus = 'All'.obs;
+
+
+  List<Map<String,String>> get filteredLeads{
+    if(selectedStatus.value == 'All') {
+      return leads;
+    } else{
+      return leads.where((lead)=>lead['status'] == selectedStatus.value).toList();
+    }
+  }
 
   void deleteLead(int index) {
     leads.removeAt(index);

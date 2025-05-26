@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kredipal/constant/app_color.dart';
 import 'package:kredipal/routes/app_routes.dart';
+import 'package:kredipal/views/attendance_history.dart';
+import 'package:kredipal/views/attendance_screen.dart';
 
 import '../widgets/dashboard_widget.dart';
 import '../widgets/leads_bar_chart.dart';
@@ -119,15 +121,20 @@ class DashboardScreen extends StatelessWidget {
                       dashboardCard(
                           icon: Icons.access_time,
                           label: "Attendance",
-                          color: Colors.blue),
+                          color: Colors.blue,
+                          onPressed: () {
+                            Get.toNamed(AppRoutes.attendanceHistory);
+                          }),
                       dashboardCard(
                           icon: Icons.person_outline,
                           label: "Profile",
-                          color: Colors.deepPurple),
+                          color: Colors.deepPurple,
+                          onPressed: () {}),
                       dashboardCard(
                           icon: Icons.task_outlined,
                           label: "Tasks",
-                          color: Colors.orange),
+                          color: Colors.orange,
+                          onPressed: () {}),
                     ],
                   ),
 
@@ -151,7 +158,7 @@ class DashboardScreen extends StatelessWidget {
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.2),
                           blurRadius: 6,
-                          offset: Offset(0, 4),
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
