@@ -9,7 +9,7 @@ class PunchAnimationController extends GetxController with GetSingleTickerProvid
   void onInit() {
     animationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 1),
+      duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
     scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(

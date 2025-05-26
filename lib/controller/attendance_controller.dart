@@ -15,9 +15,9 @@ class AttendanceController extends GetxController {
       punchInTime.value = DateTime.now();
       punchOutTime.value = null;
       totalDuration.value = "";
-      speak('Punch-in Successfull');
+      speak('Login Successfull');
       Fluttertoast.showToast(
-          msg: "Punch-in Successfull",
+          msg: "Log-in Successfull",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
           backgroundColor: Colors.green,
@@ -27,9 +27,9 @@ class AttendanceController extends GetxController {
     } else {
       punchOutTime.value = DateTime.now();
       calculateDuration();
-      speak('Punch-out Successfull');
+      speak('Logout Successfull');
       Fluttertoast.showToast(
-          msg: "Punch-Out Successfull",
+          msg: "Log-Out Successfull",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
           backgroundColor: Colors.red,
@@ -45,7 +45,7 @@ class AttendanceController extends GetxController {
       final diff = punchOutTime.value!.difference(punchInTime.value!);
       final hours = diff.inHours;
       final minutes = diff.inMinutes % 60;
-      final seconds = diff.inSeconds;
+      final seconds = diff.inSeconds % 60;
       totalDuration.value = "${hours}h ${minutes}m ${seconds}s";
     }
   }

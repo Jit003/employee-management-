@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kredipal/routes/app_pages.dart';
 import 'package:kredipal/routes/app_routes.dart';
-import 'package:kredipal/views/splash_screen.dart';
 
 void main() {
   runApp(MyApp());
