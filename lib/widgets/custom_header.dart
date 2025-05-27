@@ -17,6 +17,7 @@ Widget customHeader(String text, [String? time]) {
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           text,

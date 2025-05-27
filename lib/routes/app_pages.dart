@@ -17,6 +17,7 @@ import 'package:kredipal/views/salary_slip_screen.dart';
 import 'package:kredipal/views/splash_screen.dart';
 
 import '../controller/login-controller.dart';
+import '../views/task_screen.dart';
 
 class AppPages {
   static final List<GetPage> appPages = [
@@ -108,6 +109,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.attendanceHistory,
       page: () => AttendanceHistoryScreen(),
+      transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: AppRoutes.task,
+      page: () => TaskScreen(),
       transition: Transition.rightToLeftWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     )

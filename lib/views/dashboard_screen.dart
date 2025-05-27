@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kredipal/constant/app_color.dart';
 import 'package:kredipal/routes/app_routes.dart';
-import 'package:kredipal/views/attendance_history.dart';
-import 'package:kredipal/views/attendance_screen.dart';
+import 'package:kredipal/views/task_screen.dart';
 
 import '../widgets/dashboard_widget.dart';
 import '../widgets/leads_bar_chart.dart';
@@ -31,15 +30,15 @@ class DashboardScreen extends StatelessWidget {
                   centerTitle: false,
                   titlePadding: EdgeInsets.only(left: 10, bottom: 16),
                   title: top <= kToolbarHeight + 50
-                      ? Row(
+                      ? const Row(
                           children: [
-                            const CircleAvatar(
+                            CircleAvatar(
                               radius: 17,
                               backgroundImage: NetworkImage(
                                   'https://i.pravatar.cc/100?img=4'),
                             ),
-                            const SizedBox(width: 12),
-                            const Text(
+                            SizedBox(width: 12),
+                            Text(
                               "Welcome Back 👋",
                               style:
                                   TextStyle(fontSize: 14, color: Colors.white),
@@ -129,17 +128,21 @@ class DashboardScreen extends StatelessWidget {
                           icon: Icons.person_outline,
                           label: "Profile",
                           color: Colors.deepPurple,
-                          onPressed: () {}),
+                          onPressed: () {
+                            Get.toNamed(AppRoutes.editProfile);
+                          }),
                       dashboardCard(
                           icon: Icons.task_outlined,
                           label: "Tasks",
                           color: Colors.orange,
-                          onPressed: () {}),
+                          onPressed: () {
+                            Get.toNamed(AppRoutes.task);
+                          }),
                     ],
                   ),
 
                   const SizedBox(height: 30),
-                  Text(
+                  const Text(
                     "Leads Achieved This Week",
                     style: TextStyle(
                       fontSize: 18,
@@ -207,8 +210,6 @@ class DashboardScreen extends StatelessWidget {
 
                   const SizedBox(height: 30),
 
-                  /// Add a new section below “Today’s Overview”
-
                   /// Motivation Box
                   Container(
                     width: double.infinity,
@@ -217,8 +218,8 @@ class DashboardScreen extends StatelessWidget {
                       color: Colors.purple.shade50,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         Icon(Icons.format_quote,
                             color: Colors.purple, size: 30),
                         SizedBox(width: 12),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kredipal/constant/app_color.dart';
+import 'package:kredipal/widgets/custom_app_bar.dart';
 import 'package:kredipal/widgets/custom_button.dart';
 
 class SalarySlipScreen extends StatelessWidget {
@@ -20,12 +21,7 @@ class SalarySlipScreen extends StatelessWidget {
     };
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Salary Slip'),
-        backgroundColor: AppColor.appBarColor,
-        foregroundColor: Colors.white,
-        elevation: 1,
-      ),
+     appBar: CustomAppBar(title: 'Salary Slip'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

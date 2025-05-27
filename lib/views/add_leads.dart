@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kredipal/constant/app_color.dart';
+import 'package:kredipal/widgets/custom_app_bar.dart';
 import 'package:kredipal/widgets/custom_button.dart';
 import 'package:kredipal/widgets/custom_text_field_addlead.dart';
 
@@ -11,15 +12,9 @@ class AddLeadsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Lead'),
-        backgroundColor: AppColor.appBarColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
+     appBar: const CustomAppBar(title: 'Add Lead'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

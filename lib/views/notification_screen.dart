@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kredipal/constant/app_color.dart';
+import 'package:kredipal/widgets/custom_app_bar.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
@@ -33,12 +34,7 @@ class NotificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        backgroundColor: AppColor.appBarColor,
-        foregroundColor: Colors.white,
-        elevation: 1,
-      ),
+    appBar: CustomAppBar(title: 'Notifications'),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: notifications.length,

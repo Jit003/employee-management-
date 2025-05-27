@@ -16,9 +16,10 @@ class AllLeadsScreen extends StatelessWidget {
     return Column(
       children: [
         customHeader('All Leads List'),
+        SizedBox(height: 30,),
         // Filter Dropdown
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10,),
           child: Obx(() {
             return DropdownButtonFormField<String>(
               value: leadsController.selectedStatus.value,
@@ -46,15 +47,12 @@ class AllLeadsScreen extends StatelessWidget {
         ),
 
         Expanded(
-          child: Obx(() =>
-
-              ListView.builder(
+          child: Obx(() => ListView.builder(
                 itemCount: leadsController.filteredLeads.length,
                 itemBuilder: (context, index) {
                   final lead = leadsController.filteredLeads[index];
                   return Slidable(
                     key: ValueKey(lead['name']),
-
                     // Swipe to delete
                     startActionPane: ActionPane(
                       motion: const ScrollMotion(),
@@ -152,7 +150,7 @@ class AllLeadsScreen extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            Icon(Icons.arrow_forward_ios,
+                            const Icon(Icons.arrow_forward_ios,
                                 size: 16, color: Colors.teal),
                           ],
                         ),

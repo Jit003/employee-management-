@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kredipal/constant/app_color.dart';
+import 'package:kredipal/widgets/custom_app_bar.dart';
 
 class LeaveHistoryScreen extends StatelessWidget {
   const LeaveHistoryScreen({super.key});
@@ -56,12 +57,7 @@ class LeaveHistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Leave History'),
-        backgroundColor: AppColor.appBarColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
+      appBar: CustomAppBar(title: 'Leave History'),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: leaveHistory.length,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kredipal/constant/app_color.dart';
+import 'package:kredipal/widgets/custom_app_bar.dart';
 import 'package:kredipal/widgets/custom_button.dart';
 
 class EditProfileScreen extends StatelessWidget {
@@ -31,12 +32,7 @@ class EditProfileScreen extends StatelessWidget {
     final themeColor = Colors.teal;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Edit Profile"),
-        backgroundColor: AppColor.appBarColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
+     appBar: CustomAppBar(title: 'Edit Profile'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(

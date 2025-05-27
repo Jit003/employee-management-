@@ -8,12 +8,13 @@ class LeadsController extends GetxController {
   ].obs;
   var selectedStatus = 'All'.obs;
 
-
-  List<Map<String,String>> get filteredLeads{
-    if(selectedStatus.value == 'All') {
+  List<Map<String, String>> get filteredLeads {
+    if (selectedStatus.value == 'All') {
       return leads;
-    } else{
-      return leads.where((lead)=>lead['status'] == selectedStatus.value).toList();
+    } else {
+      return leads
+          .where((lead) => lead['status'] == selectedStatus.value)
+          .toList();
     }
   }
 

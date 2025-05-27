@@ -14,4 +14,5 @@ class AppRoutes {
   static const String leaveHistory = '/leaveHistoryScreen';
   static const String editProfile = '/editProfileScreen';
   static const String attendanceHistory = '/attendanceHistoryScreen';
+  static const String task = '/taskScreen';
 }

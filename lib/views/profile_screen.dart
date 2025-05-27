@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kredipal/routes/app_routes.dart';
+import 'package:kredipal/views/apply_leave_screen.dart';
 import '../constant/app_color.dart';
-import '../controller/login-controller.dart';
 import '../widgets/profile_option_tile.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -67,11 +67,11 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // Contact Info
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.email, color: Colors.white70, size: 18),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text(
                       'shamimmiah@gmail.com',
                       style: TextStyle(color: Colors.white70),
@@ -79,11 +79,11 @@ class ProfileScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.phone, color: Colors.white70, size: 18),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text(
                       '+91 9876543210',
                       style: TextStyle(color: Colors.white70),
@@ -95,48 +95,62 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 30),
           // Profile and Options
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-
-                const SizedBox(height: 20),
-                OptionTile(
-                  icon: Icons.receipt_long,
-                  title: "Salary Slip",
-                  onTap: () {
-                    // Navigate or show dialog
-                    Get.toNamed(AppRoutes.salarySlip);
-                  },
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+              
+                    const SizedBox(height: 20),
+                    OptionTile(
+                      icon: Icons.add,
+                      title: "Apply for Leave",
+                      onTap: () {
+                        // Navigate or show dialog
+                        Get.to(()=>ApplyLeavePage());
+                      },
+                    ),
+              
+                    const SizedBox(height: 20),
+                    OptionTile(
+                      icon: Icons.receipt_long,
+                      title: "Salary Slip",
+                      onTap: () {
+                        // Navigate or show dialog
+                        Get.toNamed(AppRoutes.salarySlip);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    OptionTile(
+                      icon: Icons.history,
+                      title: "Leave History",
+                      onTap: () {
+                        Get.toNamed(AppRoutes.leaveHistory);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    OptionTile(
+                      icon: Icons.edit,
+                      title: "Edit Profile",
+                      onTap: () {
+                        Get.toNamed(AppRoutes.editProfile);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    OptionTile(
+                      icon: Icons.logout,
+                      title: "Logout",
+                      onTap: () {
+                        Get.offAllNamed(AppRoutes.login);
+                      },
+                      iconColor: Colors.red,
+                      textColor: Colors.red,
+                    ),
+                    const SizedBox(height: 40), // for bottom padding
+                  ],
                 ),
-                const SizedBox(height: 16),
-                OptionTile(
-                  icon: Icons.history,
-                  title: "Leave History",
-                  onTap: () {
-                    Get.toNamed(AppRoutes.leaveHistory);
-                  },
-                ),
-                const SizedBox(height: 16),
-                OptionTile(
-                  icon: Icons.edit,
-                  title: "Edit Profile",
-                  onTap: () {
-                    Get.toNamed(AppRoutes.editProfile);
-                  },
-                ),
-                const SizedBox(height: 16),
-                OptionTile(
-                  icon: Icons.logout,
-                  title: "Logout",
-                  onTap: () {
-                    Get.offAllNamed(AppRoutes.login);
-                  },
-                  iconColor: Colors.red,
-                  textColor: Colors.red,
-                ),
-                const SizedBox(height: 30), // for bottom padding
-              ],
+              ),
             ),
           ),
         ],

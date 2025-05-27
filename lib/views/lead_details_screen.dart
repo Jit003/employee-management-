@@ -1,25 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:kredipal/constant/app_color.dart';
+import 'package:kredipal/widgets/custom_app_bar.dart';
 import 'package:kredipal/widgets/custom_button.dart';
 import 'package:widget_circular_animator/widget_circular_animator.dart';
-import 'package:get/get.dart';
+
+import '../controller/lead_follow_controller.dart';
+import '../widgets/follow_up_bottom_sheet.dart';
+import '../widgets/lead_details_tile_widget.dart';
 
 class LeadDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> lead = Get.arguments;
+  final LeadFollowController followController = Get.put(LeadFollowController());
 
-   LeadDetailsScreen({super.key});
+  LeadDetailsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
-        backgroundColor: AppColor.appBarColor,
-        title: Text(
-          lead['name'] ?? 'Lead Details',
-          style: TextStyle(color: Colors.white),
-        ),
-        elevation: 0,
+      appBar: CustomAppBar(
+        title: lead['name'] ?? 'Lead Details',
+        actions: [
+          Obx(() {
+            return IconButton(
+              icon: Icon(
+                followController.isFollowing.value
+                    ? Icons.star
+                    : Icons.star_border,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                followController.toggleFollow();
+                // Optional: send to backend or local DB
+              },
+            );
+          }),
+
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -41,8 +58,7 @@ class LeadDetailsScreen extends StatelessWidget {
                         child: Container(
                           decoration: BoxDecoration(
                               shape: BoxShape.circle, color: Colors.grey[200]),
-                          child: CircleAvatar(
-                          ),
+                          child: const CircleAvatar(),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -98,70 +114,27 @@ class LeadDetailsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: CustomButton(
-                    text: 'Message',
-                    onPressed: () {
-                      // Implement message logic
-                    },
-                  ),
-                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: CustomButton(
-                    text: 'Edit',
-                    onPressed: () {
-                      // Implement edit logic
-                    },
+                    text: 'Follow Up',
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+                          ),
+                          builder: (_) => FollowUpBottomSheet(leadId: lead['id'].toString()),
+                        );
+                      }
+
                   ),
                 ),
               ],
             )
           ],
         ),
-      ),
-    );
-  }
-
-  Widget detailTile(IconData icon, String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: Colors.red, size: 24),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 4),
-              Text(value,
-                  style: const TextStyle(fontSize: 15, color: Colors.black87)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget actionButton(IconData icon, String label, VoidCallback onTap) {
-    return ElevatedButton.icon(
-      onPressed: onTap,
-      icon: Icon(
-        icon,
-        size: 18,
-        color: Colors.white,
-      ),
-      label: Text(
-        label,
-        style: TextStyle(color: Colors.white),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColor.btnColor,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
