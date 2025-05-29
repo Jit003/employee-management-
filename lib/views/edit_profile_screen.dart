@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:kredipal/constant/app_color.dart';
 import 'package:kredipal/widgets/custom_app_bar.dart';
 import 'package:kredipal/widgets/custom_button.dart';
 
@@ -29,10 +28,10 @@ class EditProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeColor = Colors.teal;
+    const themeColor = Colors.teal;
 
     return Scaffold(
-     appBar: CustomAppBar(title: 'Edit Profile'),
+      appBar: const CustomAppBar(title: 'Edit Profile'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -47,11 +46,11 @@ class EditProfileScreen extends StatelessWidget {
                   bottom: 0,
                   right: 4,
                   child: GestureDetector(
-                    child: CircleAvatar(
+                    child: const CircleAvatar(
                       radius: 18,
                       backgroundColor: themeColor,
                       child:
-                          const Icon(Icons.edit, size: 18, color: Colors.white),
+                          Icon(Icons.edit, size: 18, color: Colors.white),
                     ),
                   ),
                 ),
@@ -65,9 +64,7 @@ class EditProfileScreen extends StatelessWidget {
             _buildTextField("Email Address", Icons.email, emailController,
                 type: TextInputType.emailAddress),
             const SizedBox(height: 30),
-            CustomButton(text: 'Save Changes', onPressed:(){
-
-            })
+            CustomButton(text: 'Save Changes', onPressed: () {}),
           ],
         ),
       ),

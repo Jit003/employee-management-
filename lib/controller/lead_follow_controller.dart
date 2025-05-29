@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 
-class LeadFollowController extends GetxController {
+class FavFollowController extends GetxController {
   var isFollowing = false.obs;
 
   void toggleFollow(){

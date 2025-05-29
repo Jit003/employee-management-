@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:kredipal/constant/app_color.dart';
 import 'package:kredipal/widgets/custom_button.dart';
 import '../controller/leave_controller.dart';
+import '../widgets/date_picker_widget.dart';
 
 class ApplyLeavePage extends StatelessWidget {
   final LeaveController controller = Get.put(LeaveController());
@@ -46,31 +47,30 @@ class ApplyLeavePage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       Obx(() => DropdownButtonFormField<String>(
-                value: controller.leaveType.value.isEmpty
-                ? null
-                    : controller.leaveType.value,
-                  hint: Text('Select Leave Type'),
-                  items: controller.options
-                      .map((type) => DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(type),
-                  ))
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      controller.leaveType.value = value;
-                    }
-                  },
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                )),
-
+                            value: controller.leaveType.value.isEmpty
+                                ? null
+                                : controller.leaveType.value,
+                            hint: Text('Select Leave Type'),
+                            items: controller.options
+                                .map((type) => DropdownMenuItem<String>(
+                                      value: type,
+                                      child: Text(type),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                controller.leaveType.value = value;
+                              }
+                            },
+                            decoration: InputDecoration(
+                              contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          )),
 
                       const SizedBox(height: 8),
                       // Start Date
@@ -82,14 +82,14 @@ class ApplyLeavePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Obx(() => _DatePickerTile(
-                        label: controller.startDate.value == null
-                            ? 'Select Start Date'
-                            : DateFormat('yyyy-MM-dd')
-                            .format(controller.startDate.value!),
-                        icon: Icons.calendar_today,
-                        onTap: () => controller.pickDate(context, true),
-                      )),
+                      Obx(() => DatePickerTile(
+                            label: controller.startDate.value == null
+                                ? 'Select Start Date'
+                                : DateFormat('yyyy-MM-dd')
+                                    .format(controller.startDate.value!),
+                            icon: Icons.calendar_today,
+                            onTap: () => controller.pickDate(context, true),
+                          )),
                       const SizedBox(height: 20),
 
                       // End Date
@@ -101,14 +101,14 @@ class ApplyLeavePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Obx(() => _DatePickerTile(
-                        label: controller.endDate.value == null
-                            ? 'Select End Date'
-                            : DateFormat('yyyy-MM-dd')
-                            .format(controller.endDate.value!),
-                        icon: Icons.calendar_today_outlined,
-                        onTap: () => controller.pickDate(context, false),
-                      )),
+                      Obx(() => DatePickerTile(
+                            label: controller.endDate.value == null
+                                ? 'Select End Date'
+                                : DateFormat('yyyy-MM-dd')
+                                    .format(controller.endDate.value!),
+                            icon: Icons.calendar_today_outlined,
+                            onTap: () => controller.pickDate(context, false),
+                          )),
                       const SizedBox(height: 20),
 
                       // Reason
@@ -131,12 +131,12 @@ class ApplyLeavePage extends StatelessWidget {
                               horizontal: 16, vertical: 14),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                            BorderSide(color: Colors.grey.shade300),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
                           ),
                         ),
-                        validator: (value) =>
-                        value == null || value.isEmpty ? 'Please enter a reason' : null,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Please enter a reason'
+                            : null,
                       ),
 
                       const SizedBox(height: 30),
@@ -159,41 +159,3 @@ class ApplyLeavePage extends StatelessWidget {
   }
 }
 
-class _DatePickerTile extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _DatePickerTile({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.deepPurple),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

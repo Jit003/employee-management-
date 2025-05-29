@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kredipal/constant/app_color.dart';
 import 'package:kredipal/routes/app_routes.dart';
-import 'package:kredipal/views/task_screen.dart';
-
 import '../widgets/dashboard_widget.dart';
 import '../widgets/leads_bar_chart.dart';
 
@@ -50,7 +48,8 @@ class DashboardScreen extends StatelessWidget {
                     fit: StackFit.expand,
                     children: [
                       Container(
-                        decoration: BoxDecoration(color: AppColor.appBarColor),
+                        decoration:
+                            const BoxDecoration(color: AppColor.appBarColor),
                       ),
                       Container(
                         color: Colors.black.withOpacity(0.2),

@@ -23,7 +23,7 @@ class AllLeadsScreen extends StatelessWidget {
           child: Obx(() {
             return DropdownButtonFormField<String>(
               value: leadsController.selectedStatus.value,
-              items: ['All', 'Completed', 'Pending']
+              items: ['All', 'Completed', 'Pending','forward to TL']
                   .map((status) => DropdownMenuItem(
                         value: status,
                         child: Text(status),
