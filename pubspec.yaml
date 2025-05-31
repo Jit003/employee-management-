@@ -49,6 +49,9 @@ dependencies:
   fluttertoast: ^8.2.12
   flutter_native_splash: ^2.4.4
   shared_preferences: ^2.5.3
+  camera: ^0.11.0+2
+  path_provider: ^2.1.5
+  http: ^1.4.0
 
 dev_dependencies:
   flutter_test:

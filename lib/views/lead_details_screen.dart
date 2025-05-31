@@ -5,7 +5,7 @@ import 'package:kredipal/widgets/custom_button.dart';
 import 'package:widget_circular_animator/widget_circular_animator.dart';
 
 import '../controller/follow_up_controller.dart';
-import '../controller/lead_follow_controller.dart';
+import '../controller/fav_follow_controller.dart';
 import '../widgets/follow_up_bottom_sheet.dart';
 import '../widgets/lead_details_tile_widget.dart';
 

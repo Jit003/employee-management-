@@ -11,29 +11,40 @@ class AllLeadsScreen extends StatelessWidget {
 
   final LeadsController leadsController = Get.put(LeadsController());
 
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'forward to tl':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      default:
+        return Colors.grey.shade600;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         customHeader('All Leads List'),
-        SizedBox(height: 30,),
+        const SizedBox(height: 30),
         // Filter Dropdown
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10,),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Obx(() {
             return DropdownButtonFormField<String>(
               value: leadsController.selectedStatus.value,
-              items: ['All', 'Completed', 'Pending','forward to TL']
-                  .map((status) => DropdownMenuItem(
-                        value: status,
-                        child: Text(status),
-                      ))
+              items: ['All', 'Rejected', 'forward to TL']
+                  .map(
+                    (status) => DropdownMenuItem(
+                      value: status,
+                      child: Text(status),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
                   leadsController.selectedStatus.value = value;
-                } else {
-                  'No Data Found';
                 }
               },
               decoration: InputDecoration(
@@ -51,6 +62,8 @@ class AllLeadsScreen extends StatelessWidget {
                 itemCount: leadsController.filteredLeads.length,
                 itemBuilder: (context, index) {
                   final lead = leadsController.filteredLeads[index];
+                  final status = (lead['status'] ?? '').toString();
+
                   return Slidable(
                     key: ValueKey(lead['name']),
                     // Swipe to delete
@@ -80,19 +93,19 @@ class AllLeadsScreen extends StatelessWidget {
                       children: [
                         SlidableAction(
                           onPressed: (_) =>
-                              leadsController.markAsCompleted(index),
-                          backgroundColor: Colors.green.shade600,
+                              leadsController.markAsForward(index),
+                          backgroundColor: Colors.green.shade700,
                           foregroundColor: Colors.white,
-                          icon: Icons.check_circle_outline,
-                          label: 'Completed',
+                          icon: Icons.send,
+                          label: 'Forward',
                         ),
                         SlidableAction(
                           onPressed: (_) =>
-                              leadsController.markAsNotCompleted(index),
-                          backgroundColor: Colors.orange.shade400,
+                              leadsController.markAsRejected(index),
+                          backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
                           icon: Icons.cancel_outlined,
-                          label: 'Pending',
+                          label: 'Reject',
                         ),
                       ],
                     ),
@@ -102,28 +115,21 @@ class AllLeadsScreen extends StatelessWidget {
                           Get.toNamed(AppRoutes.leadDetails, arguments: lead),
                       child: Container(
                         margin: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        padding: const EdgeInsets.all(16),
+                            horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: const [
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
                             BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 6,
-                              offset: Offset(0, 3),
+                              color: AppColor.appBarColor.withOpacity(0.1),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
                         child: Row(
                           children: [
-                            const CircleAvatar(
-                              radius: 24,
-                              backgroundColor: AppColor.btnColor,
-                              child: Icon(Icons.person,
-                                  color: AppColor.appBarColor),
-                            ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 18),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,27 +137,37 @@ class AllLeadsScreen extends StatelessWidget {
                                   Text(
                                     lead['name'] ?? '',
                                     style: const TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 15,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.black87,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Status: ${lead['status']}",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: lead['status'] == 'Completed'
-                                          ? Colors.green
-                                          : Colors.orange,
-                                      fontWeight: FontWeight.w600,
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(status)
+                                          .withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      'Status: $status',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: _getStatusColor(status),
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.arrow_forward_ios,
-                                size: 16, color: Colors.teal),
+                            const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 20,
+                              color: Colors.blueAccent,
+                            ),
                           ],
                         ),
                       ),

@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kredipal/controller/attendance_controller.dart';
@@ -5,6 +6,7 @@ import 'package:kredipal/widgets/custom_header.dart';
 
 import '../controller/animation_controller.dart';
 import '../widgets/attendance_time_widget.dart';
+import '../widgets/circular_border_painter.dart';
 
 class AttendanceScreen extends StatelessWidget {
   AttendanceScreen({super.key});
@@ -32,16 +34,49 @@ class AttendanceScreen extends StatelessWidget {
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                     const SizedBox(height: 40),
-              
+
                     // Punch In/Out Button
-                    AnimatedBuilder(
-                      animation: animController.animationController,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: animController.scaleAnimation.value,
-                          child: GestureDetector(
-                            onTap: controller.togglePunch,
-                            child: Obx(() => Container(
+                    Obx(() {
+                      if (controller.isProcessingLogin.value) {
+                        if (controller.isCameraInitialized.value) {
+                          return Column(
+                            children: [
+                              TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0.0, end: 1.0),
+                                duration: const Duration(seconds: 5),
+                                builder: (context, value, child) {
+                                  return CustomPaint(
+                                    painter: CircularBorderPainter(progress: value),
+                                    child: Container(
+                                      width: 250,
+                                      height: 250,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: ClipOval(
+                                        child: CameraPreview(controller.cameraController!),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+
+                              const SizedBox(height: 10),
+                              const Text("Please wait 5 seconds...."),
+                            ],
+                          );
+                        } else {
+                          return const CircularProgressIndicator();
+                        }
+                      } else {
+                        return AnimatedBuilder(
+                          animation: animController.animationController,
+                          builder: (context, child) {
+                            return Transform.scale(
+                              scale: animController.scaleAnimation.value,
+                              child: GestureDetector(
+                                onTap: controller.togglePunch,
+                                child: Container(
                                   width: 180,
                                   height: 180,
                                   decoration: BoxDecoration(
@@ -72,7 +107,8 @@ class AttendanceScreen extends StatelessWidget {
                                   ),
                                   child: Center(
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           controller.isPunchedIn.value
@@ -95,13 +131,15 @@ class AttendanceScreen extends StatelessWidget {
                                       ],
                                     ),
                                   ),
-                                )),
-                          ),
+                                ),
+                              ),
+                            );
+                          },
                         );
-                      },
-                    ),
+                      }
+                    }),
                     const SizedBox(height: 30),
-              
+
                     // Total Duration
                     Obx(() => punchInfoCard(
                           icon: Icons.access_time,
@@ -112,24 +150,24 @@ class AttendanceScreen extends StatelessWidget {
                               : controller.totalDuration.value,
                         )),
                     const SizedBox(height: 10),
-              
+
                     Obx(() => punchInfoCard(
                           icon: Icons.login,
                           iconColor: Colors.green,
-                          label: "Punch In",
-                          time: controller.formatTime(controller.punchInTime.value),
+                          label: "Log-In Time",
+                          time: controller
+                              .formatTime(controller.punchInTime.value),
                         )),
-              
+
                     Obx(() => punchInfoCard(
                           icon: Icons.logout,
                           iconColor: Colors.red,
-                          label: "Punch Out",
-                          time:
-                              controller.formatTime(controller.punchOutTime.value),
+                          label: "Log-Out Time",
+                          time: controller
+                              .formatTime(controller.punchOutTime.value),
                         )),
-              
+
                     const SizedBox(height: 10),
-              
                   ],
                 ),
               ),

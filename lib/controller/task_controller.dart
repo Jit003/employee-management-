@@ -41,7 +41,7 @@ class TaskController extends GetxController {
     ),
     Task(
       title: "Updated Loan Status",
-      description: "Marked approved, rejected, and pending statuses for 10 loans",
+      description: "Marked approved,s rejected, and pending statuses for 10 loans",
       status: "Completed",
       time: "3:00 PM",
       priority: "Medium",

@@ -1,40 +1,51 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:get/get.dart';
-import 'package:kredipal/routes/app_routes.dart';
-import 'package:kredipal/views/home_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
+import '../services/api_services.dart';
 
 class LoginController extends GetxController {
-  final phoneController = TextEditingController();
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  var isLoading = false.obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    print('LoginController Initialized');
-  }
+  final ApiService _apiService = ApiService();
 
-  // @override
-  // void onClose() {
-  //   print('LoginController Disposed');
-  //   phoneController.dispose();
-  //   passwordController.dispose();
-  //   super.onClose();
-  // }
-
-
-  void login() {
-    final phone = phoneController.text.trim();
+  Future<void> handleLogin() async {
+    final email = emailController.text.trim();
     final password = passwordController.text;
 
-    // Your login logic here
-    Get.toNamed(AppRoutes.home);
-    print('Phone: $phone, Password: $password');
+    if (email.isEmpty || password.isEmpty) {
+      Fluttertoast.showToast(msg: "Please fill in all fields");
+      return;
+    }
+
+    isLoading.value = true;
+
+    try {
+      final response = await _apiService.logIn(email, password);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // You can store token or user info here
+        Fluttertoast.showToast(msg: "Login successful");
+        // Get.offNamed('/home'); // Navigate to home if needed
+      } else {
+        final error = jsonDecode(response.body);
+        Fluttertoast.showToast(msg: error['message'] ?? "Login failed");
+      }
+    } catch (e) {
+      Fluttertoast.showToast(msg: "Error: $e");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  void clearFields() {
-    phoneController.clear();
-    passwordController.clear();
+  @override
+  void onClose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.onClose();
   }
-
-
 }

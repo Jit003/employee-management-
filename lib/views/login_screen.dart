@@ -10,6 +10,8 @@ import '../widgets/custom_text_field.dart';
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});
 
+  final _formKey = GlobalKey<FormState>();
+
 
   @override
   Widget build(BuildContext context) {
@@ -34,53 +36,71 @@ class LoginScreen extends StatelessWidget {
                   child: IntrinsicHeight(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            height: 250,
-                            decoration: BoxDecoration(
-                              image: const DecorationImage(
-                                image: AssetImage(AppImages.loginImg),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              height: 250,
+                              decoration: BoxDecoration(
+                                image: const DecorationImage(
+                                  image: AssetImage(AppImages.loginImg),
+                                ),
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                              borderRadius: BorderRadius.circular(20),
                             ),
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Welcome Back!',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Welcome Back!',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Login with your phone and password',
-                            style: TextStyle(fontSize: 16, color: Colors.white70),
-                          ),
-                          const SizedBox(height: 24),
-                          CustomTextField(
-                            controller: controller.phoneController,
-                            label: 'Phone Number',
-                            prefixIcon: Icons.phone,
-                            keyboardType: TextInputType.phone,
-                          ),
-                          const SizedBox(height: 16),
-                          CustomTextField(
-                            controller: controller.passwordController,
-                            label: 'Password',
-                            prefixIcon: Icons.lock,
-                            obscureText: true,
-                          ),
-                          const SizedBox(height: 24),
-                          CustomButton(
-                            text: 'Login',
-                            onPressed: controller.login,
-                          ),
-                          const SizedBox(height: 16),
-                        ],
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Login with your email and password',
+                              style: TextStyle(fontSize: 16, color: Colors.white70),
+                            ),
+                            const SizedBox(height: 24),
+                            CustomTextField(
+                              controller: controller.emailController,
+                              label: 'Email',
+                              prefixIcon: Icons.phone,
+                              validator:(value){
+                                if(value == null || value.isEmpty){
+                                  return 'Email id Required';
+                                }
+                                return null;
+                              } ,
+                            ),
+                            const SizedBox(height: 16),
+                            CustomTextField(
+                              controller: controller.passwordController,
+                              label: 'Password',
+                              prefixIcon: Icons.lock,
+                              obscureText: true,
+                              validator: (value) {
+                                if (value == null || value.isEmpty ) {
+                                  return 'Password require';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                            CustomButton(
+                              text: 'Login',
+                              onPressed:(){
+                                if(_formKey.currentState!.validate()){
+                                  controller.handleLogin();
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
                       ),
                     ),
                   ),
