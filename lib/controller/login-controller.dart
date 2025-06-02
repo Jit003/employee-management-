@@ -1,51 +1,61 @@
-import 'dart:convert';
-import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get/get.dart';
+import 'package:kredipal/routes/app_routes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/api_services.dart';
 
-class LoginController extends GetxController {
+class AuthController extends GetxController {
+  final ApiService apiService = ApiService();
+  var isLoading = false.obs;
+  var userData = {}.obs;
+  var token = ''.obs;
+
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  var isLoading = false.obs;
 
-  final ApiService _apiService = ApiService();
+  Future<void> loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    token.value = prefs.getString('token') ?? '';
+  }
 
-  Future<void> handleLogin() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text;
-
-    if (email.isEmpty || password.isEmpty) {
-      Fluttertoast.showToast(msg: "Please fill in all fields");
-      return;
-    }
-
+  void loginUser() async {
     isLoading.value = true;
+    final result = await apiService.logIn(
+      emailController.text.trim(),
+      passwordController.text.trim(),
+    );
+    isLoading.value = false;
 
-    try {
-      final response = await _apiService.logIn(email, password);
+    if (result['success']) {
+      userData.value = result['user'];
+      token.value = result['token'];
+      // ✅ Save token using SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', result['token']);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        // You can store token or user info here
-        Fluttertoast.showToast(msg: "Login successful");
-        // Get.offNamed('/home'); // Navigate to home if needed
-      } else {
-        final error = jsonDecode(response.body);
-        Fluttertoast.showToast(msg: error['message'] ?? "Login failed");
-      }
-    } catch (e) {
-      Fluttertoast.showToast(msg: "Error: $e");
-    } finally {
-      isLoading.value = false;
+
+      Get.snackbar(backgroundColor: Colors.green,'Success', result['message']);
+      Get.offNamed(AppRoutes.home);
+      // Navigate to home/dashboard
+    } else {
+      Get.snackbar('Error', result['message'], backgroundColor: Colors.redAccent, colorText: Colors.white);
     }
   }
 
-  @override
-  void onClose() {
-    emailController.dispose();
-    passwordController.dispose();
-    super.onClose();
+  void logoutUser() async {
+    // Clear token and user data
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+
+    userData.value = {};
+    token.value = '';
+
+    // Navigate to login screen and remove all previous routes
+    Get.offAllNamed(AppRoutes.login);
+
+    // Optional: Show a message
+    Get.snackbar('Logged Out', 'You have been successfully logged out');
   }
+
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 Widget buildTextField({
-  TextEditingController? controller,
+   TextEditingController? controller,
   required String label,
   required IconData icon,
   TextInputType keyboardType = TextInputType.text,
@@ -10,6 +10,7 @@ Widget buildTextField({
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: TextField(
+      controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
       decoration: InputDecoration(

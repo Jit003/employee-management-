@@ -54,7 +54,7 @@ class TaskCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style:
                   const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
@@ -87,24 +87,6 @@ class TaskCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(time),
                   ],
-                ),
-                Chip(
-                  backgroundColor: status == "Done"
-                      ? Colors.green.withOpacity(0.2)
-                      : status == "In Progress"
-                      ? Colors.orange.withOpacity(0.2)
-                      : Colors.red.withOpacity(0.2),
-                  label: Text(
-                    status,
-                    style: TextStyle(
-                      color: status == "Done"
-                          ? Colors.green
-                          : status == "In Progress"
-                          ? Colors.orange
-                          : Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                 ),
               ],
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kredipal/models/all_leads_list.dart';
 import 'package:kredipal/widgets/custom_app_bar.dart';
 import 'package:kredipal/widgets/custom_button.dart';
 import 'package:widget_circular_animator/widget_circular_animator.dart';
@@ -10,10 +11,9 @@ import '../widgets/follow_up_bottom_sheet.dart';
 import '../widgets/lead_details_tile_widget.dart';
 
 class LeadDetailsScreen extends StatelessWidget {
-  final Map<String, dynamic> lead = Get.arguments;
+  final Data lead = Get.arguments;
   final FavFollowController favController = Get.put(FavFollowController());
   final FollowUpController followController = Get.put(FollowUpController());
-
 
   LeadDetailsScreen({super.key});
 
@@ -21,7 +21,7 @@ class LeadDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: lead['name'] ?? 'Lead Details',
+        title: lead.name ?? 'Lead Details',
         actions: [
           Obx(() {
             return IconButton(
@@ -37,7 +37,6 @@ class LeadDetailsScreen extends StatelessWidget {
               },
             );
           }),
-
         ],
       ),
       body: SingleChildScrollView(
@@ -60,12 +59,17 @@ class LeadDetailsScreen extends StatelessWidget {
                         child: Container(
                           decoration: BoxDecoration(
                               shape: BoxShape.circle, color: Colors.grey[200]),
-                          child: const CircleAvatar(),
+                          child: CircleAvatar(
+                            child: Text(
+                              lead.name![0],
+                              style: const TextStyle(fontSize: 25),
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        lead['name'] ?? 'Unknown',
+                        'Status : ${lead.status}',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -83,44 +87,44 @@ class LeadDetailsScreen extends StatelessWidget {
               final note = followController.lastNote.value;
               return note.isNotEmpty
                   ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Latest Follow-Up Note",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(note),
-                  ),
-                ],
-              )
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 20),
+                        const Text(
+                          "Latest Follow-Up Note",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(note),
+                        ),
+                      ],
+                    )
                   : const SizedBox();
             }),
             const SizedBox(height: 30),
 
-
             // Detail Tiles
-            detailTile(Icons.phone, "Phone", lead['phone'] ?? "Not Provided"),
+            detailTile(Icons.phone, "Phone", lead.phone ?? "Not Provided"),
             const SizedBox(height: 15),
-            detailTile(Icons.email, "Email", lead['email'] ?? "Not Provided"),
-            const SizedBox(height: 15),
-            detailTile(Icons.location_on, "Location",
-                lead['location'] ?? "Not Provided"),
+            detailTile(Icons.email, "Email", lead.email ?? "Not Provided"),
             const SizedBox(height: 15),
             detailTile(
-                Icons.note, "Note", lead['note'] ?? "No additional notes"),
+                Icons.location_on, "Location", lead.location ?? "Not Provided"),
+            const SizedBox(height: 15),
+            detailTile(Icons.house_siding_sharp, "Company Name",
+                lead.companyName ?? ''),
             const SizedBox(height: 15),
             detailTile(Icons.calendar_today, "Created On",
-                lead['createdAt'] ?? "Unknown"),
+                lead.createdAt ?? "Unknown"),
 
             const SizedBox(height: 30),
 
@@ -133,33 +137,36 @@ class LeadDetailsScreen extends StatelessWidget {
                     text: 'Call',
                     onPressed: () {
                       // Implement call logic
+                      Get.snackbar(
+                          backgroundColor: Colors.green, 'Call', 'Checking');
                     },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: CustomButton(
-                    text: 'Follow Up',
+                      text: 'Follow Up',
                       onPressed: () {
                         Get.bottomSheet(
                           SingleChildScrollView(
                             padding: EdgeInsets.only(
                               bottom: MediaQuery.of(context).viewInsets.bottom,
                             ),
-                            child: FollowUpBottomSheet(leadId: lead['id'].toString()),
+                            child:
+                                FollowUpBottomSheet(leadId: lead.id.toString()),
                           ),
                           isScrollControlled: true,
                           backgroundColor: Colors.white,
                         );
-                      }
-
-                  ),
+                      }),
                 ),
               ],
             ),
-            SizedBox(height: 10,),
+            SizedBox(
+              height: 10,
+            ),
             //forward button
-            CustomButton(text: 'Forward To Team Leader', onPressed: (){})
+            CustomButton(text: 'Forward To Team Leader', onPressed: () {})
           ],
         ),
       ),

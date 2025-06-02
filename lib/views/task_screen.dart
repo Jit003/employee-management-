@@ -21,11 +21,11 @@ class TaskScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final task = controller.tasks[index];
           return TaskCard(
-            title: task.title,
-            description: task.description,
-            status: task.status,
-            time: task.time,
-            priority: task.priority,
+            title: task.title ?? '',
+            description: task.description ?? '',
+            status: task.status ?? '',
+            time: task.createdAt ?? '',
+            priority: task.status ?? '',
           );
         },
       )),

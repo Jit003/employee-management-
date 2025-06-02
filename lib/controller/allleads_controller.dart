@@ -1,73 +1,31 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../models/all_leads_list.dart';
+import '../services/api_services.dart';
+import 'login-controller.dart';
+
 class LeadsController extends GetxController {
-  var leads = <RxMap<String, String>>[
-    RxMap({'name': 'John Doe', 'status': 'Pending'}),
-    RxMap({'name': 'Jane Smith', 'status': 'Pending'}),
-    RxMap({'name': 'Alex Johnson', 'status': 'Pending'}),
-    RxMap({'name': 'John Doe', 'status': 'Pending'}),
-    RxMap({'name': 'Jane Smith', 'status': 'Pending'}),
-    RxMap({'name': 'Alex Johnson', 'status': 'Pending'}),
-  ].obs;
+  var isLoading = false.obs;
+  var leadsList = <Data>[].obs;
 
-  var selectedStatus = 'All'.obs;
-
-  // Reactive filtered list
-  var filteredLeads = <RxMap<String, String>>[].obs;
+  final AuthController authController = Get.find();
 
   @override
   void onInit() {
+    fetchLeads();
     super.onInit();
-    // Initially fill filteredLeads
-    updateFilteredLeads();
-
-    // Listen to selectedStatus changes and update filtered list accordingly
-    ever(selectedStatus, (_) {
-      updateFilteredLeads();
-    });
   }
 
-  void updateFilteredLeads() {
-    if (selectedStatus.value == 'All') {
-      filteredLeads.assignAll(leads);
-    } else {
-      filteredLeads.assignAll(
-          leads.where((lead) => lead['status']!.toLowerCase() == selectedStatus.value.toLowerCase())
-      );
+  Future<void> fetchLeads() async {
+    try {
+      isLoading.value = true;
+      final result = await ApiService().fetchAllLeads(token: authController.token.value);
+      leadsList.value = result.data ?? [];
+    } catch (e) {
+      Get.snackbar("Error", "Failed to load leads", backgroundColor: Colors.red, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
     }
-  }
-
-  void deleteLead(int index) {
-    // Remove from leads list, which triggers update in filteredLeads if you re-call updateFilteredLeads()
-    leads.removeAt(index);
-    updateFilteredLeads();
-  }
-
-  void markAsForward(int index) {
-    // Update status reactively
-    filteredLeads[index]['status'] = 'forward to TL';
-    filteredLeads.refresh();
-
-    // Also update the main leads list
-    int mainIndex = leads.indexWhere((lead) => lead['name'] == filteredLeads[index]['name']);
-    if (mainIndex != -1) {
-      leads[mainIndex]['status'] = 'forward to TL';
-      leads.refresh();
-    }
-
-    updateFilteredLeads();
-  }
-
-  void markAsRejected(int index) {
-    filteredLeads[index]['status'] = 'Rejected';
-    filteredLeads.refresh();
-
-    int mainIndex = leads.indexWhere((lead) => lead['name'] == filteredLeads[index]['name']);
-    if (mainIndex != -1) {
-      leads[mainIndex]['status'] = 'Rejected';
-      leads.refresh();
-    }
-
-    updateFilteredLeads();
   }
 }

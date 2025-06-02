@@ -1,20 +1,25 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:kredipal/widgets/custom_app_bar.dart';
-import 'package:kredipal/widgets/custom_button.dart';
+import 'package:get/get.dart';
+import 'package:kredipal/controller/edit_profile_controller.dart';
+
+import '../controller/image_picker_controller.dart';
+import '../widgets/custom_app_bar.dart';
+import '../widgets/custom_button.dart';
 
 class EditProfileScreen extends StatelessWidget {
-  final TextEditingController nameController =
-      TextEditingController(text: "Dillip Kumar Pradhan");
 
-  final TextEditingController designationController =
-      TextEditingController(text: "Flutter Developer");
+  final ProfileUpdateController updateController = Get.put(ProfileUpdateController());
+  final ImagePickerController controller = Get.put(ImagePickerController());
 
-  final TextEditingController emailController =
-      TextEditingController(text: "dillip@example.com");
 
   Widget _buildTextField(
-      String label, IconData icon, TextEditingController controller,
-      {TextInputType type = TextInputType.text}) {
+      String label,
+      IconData icon,
+      TextEditingController controller, {
+        TextInputType type = TextInputType.text,
+      }) {
     return TextField(
       controller: controller,
       keyboardType: type,
@@ -32,42 +37,57 @@ class EditProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: const CustomAppBar(title: 'Edit Profile'),
-      body: SingleChildScrollView(
+      body: Obx(() => updateController.isUpdating.value
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             Stack(
               children: [
-                CircleAvatar(
+                Obx(() => CircleAvatar(
                   radius: 60,
+                  backgroundImage: controller.pickedImagePath.value == ''
+                      ? null
+                      : FileImage(
+                    File(controller.pickedImagePath.value),
+                  ) as ImageProvider,
                   backgroundColor: Colors.grey.shade300,
-                ),
+                  child: controller.pickedImagePath.value == ''
+                      ? Icon(Icons.person, size: 60, color: Colors.white54)
+                      : null,
+                )),
                 Positioned(
                   bottom: 0,
                   right: 4,
                   child: GestureDetector(
+                    onTap: () {
+                      controller.pickImage();
+                    },
                     child: const CircleAvatar(
                       radius: 18,
-                      backgroundColor: themeColor,
-                      child:
-                          Icon(Icons.edit, size: 18, color: Colors.white),
+                      backgroundColor: Colors.blue, // use your themeColor here
+                      child: Icon(Icons.edit, size: 18, color: Colors.white),
                     ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 30),
-            _buildTextField("Full Name", Icons.person, nameController),
+            _buildTextField("Full Name", Icons.person, updateController.nameController),
             const SizedBox(height: 20),
-            _buildTextField("Designation", Icons.badge, designationController),
+            _buildTextField("Phone Number", Icons.phone, updateController.phoneController),
             const SizedBox(height: 20),
-            _buildTextField("Email Address", Icons.email, emailController,
+            _buildTextField("Address", Icons.location_pin, updateController.addressController,
                 type: TextInputType.emailAddress),
             const SizedBox(height: 30),
-            CustomButton(text: 'Save Changes', onPressed: () {}),
+            CustomButton(
+              text: 'Save Changes',
+              onPressed: () => updateController.updateProfile(),
+            ),
           ],
         ),
-      ),
+      )),
     );
   }
 }

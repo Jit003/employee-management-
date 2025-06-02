@@ -6,6 +6,9 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:kredipal/services/voice_service.dart';
 
+import '../services/api_services.dart';
+import 'login-controller.dart';
+
 class AttendanceController extends GetxController {
   var isPunchedIn = false.obs;
   var punchInTime = Rxn<DateTime>();
@@ -13,6 +16,7 @@ class AttendanceController extends GetxController {
   var totalDuration = "".obs;
   var isProcessingLogin = false.obs;
   var isCameraInitialized = false.obs;
+  final AuthController authController = Get.put(AuthController());
 
   CameraController? cameraController;
 
@@ -25,26 +29,43 @@ class AttendanceController extends GetxController {
     // Wait for 5 seconds simulating face detection
     await Future.delayed(const Duration(seconds: 5));
 
-    // Optionally take a picture here:
-    // XFile? imageFile = await cameraController?.takePicture();
+    // Take a picture BEFORE stopping the camera
+    XFile? imageFile = await cameraController?.takePicture();
 
     await stopCamera();
 
     if (!isPunchedIn.value) {
-      // Handle login
       punchInTime.value = DateTime.now();
       punchOutTime.value = null;
       totalDuration.value = "";
       isPunchedIn.value = true;
 
-      speak("Login Successful");
-      Fluttertoast.showToast(
-        msg: "Log-in Successful",
-        backgroundColor: Colors.green,
-        textColor: Colors.white,
-      );
+      try {
+        // Use imageFile?.path to get the local file path
+        final response = await ApiService.markAttendanceCheckIn(
+          token: authController.token.value,
+          checkinImage: imageFile?.path ?? "", // You may need to upload this
+          location: "Office Building, Bhubaneswar",
+          coordinates: "19.0760, 72.8777",
+          notes: "Checked in on time",
+        );
+
+        if (response['status'] == 'success') {
+          speak("Login Successful");
+          Fluttertoast.showToast(
+            msg: "Log-in Successful",
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+          );
+        } else {
+          Fluttertoast.showToast(msg: response['message']);
+        }
+      } catch (e) {
+        print('the error is ${e.toString()}');
+        Fluttertoast.showToast(msg: 'API Error: $e');
+      }
+
     } else {
-      // Handle logout
       punchOutTime.value = DateTime.now();
       calculateDuration();
       isPunchedIn.value = false;

@@ -18,7 +18,7 @@ class HomeScreen extends StatelessWidget {
     const DashboardScreen(),
     AllLeadsScreen(),
     AttendanceScreen(),
-     const ProfileScreen(),
+    ProfileScreen(),
 
   ];
 

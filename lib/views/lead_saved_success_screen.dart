@@ -63,7 +63,7 @@ class LeadSavedSuccessScreen extends StatelessWidget {
               // ✅ View Leads Button
               ElevatedButton.icon(
                 onPressed: () {
-                  Get.offAllNamed(AppRoutes.home);
+                  Get.toNamed(AppRoutes.home);
                 },
                 icon: Icon(Icons.list_alt),
                 label: Text("Go to home"),

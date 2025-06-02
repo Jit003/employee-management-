@@ -4,6 +4,7 @@ import 'package:kredipal/views/add_leads.dart';
 import 'package:kredipal/views/all_leads.dart';
 import 'package:kredipal/views/attendance_history.dart';
 import 'package:kredipal/views/attendance_screen.dart';
+import 'package:kredipal/views/change_password_screen.dart';
 import 'package:kredipal/views/dashboard_screen.dart';
 import 'package:kredipal/views/edit_profile_screen.dart';
 import 'package:kredipal/views/home_screen.dart';
@@ -21,12 +22,16 @@ import '../views/task_screen.dart';
 
 class AppPages {
   static final List<GetPage> appPages = [
-    GetPage(name: AppRoutes.splash, page: () => SplashScreen()),
+    GetPage(name: AppRoutes.splash, page: () => SplashScreen(),binding: BindingsBuilder(() {
+  // Register AuthController when SplashScreen is created
+  Get.lazyPut<AuthController>(() => AuthController());
+  }),
+  ),
     GetPage(
       name: AppRoutes.login,
       page: () => LoginScreen(),
       binding: BindingsBuilder(() {
-        Get.put(LoginController()); // use Get.put here (not lazyPut) to ensure fresh instance
+        Get.put(AuthController()); // use Get.put here (not lazyPut) to ensure fresh instance
       }),
       transition: Transition.fadeIn,
       transitionDuration: Duration(milliseconds: 800),
@@ -115,6 +120,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.task,
       page: () => TaskScreen(),
+      transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: AppRoutes.password,
+      page: () => ChangePasswordScreen(),
       transition: Transition.rightToLeftWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     )

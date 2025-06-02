@@ -15,7 +15,7 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final LoginController controller = Get.find<LoginController>();
+    final AuthController controller = Get.find<AuthController>();
     return Scaffold(
       resizeToAvoidBottomInset: true, // this helps shift UI when keyboard appears
       body: Container(
@@ -90,14 +90,15 @@ class LoginScreen extends StatelessWidget {
                               },
                             ),
                             const SizedBox(height: 24),
-                            CustomButton(
-                              text: 'Login',
-                              onPressed:(){
-                                if(_formKey.currentState!.validate()){
-                                  controller.handleLogin();
-                                }
-                              },
-                            ),
+                           Obx(()=> CustomButton(
+                             isLoading: controller.isLoading.value,
+                             text: 'Login',
+                             onPressed:(){
+                               if(_formKey.currentState!.validate()){
+                                 controller.loginUser();
+                               }
+                             },
+                           ),),
                             const SizedBox(height: 16),
                           ],
                         ),

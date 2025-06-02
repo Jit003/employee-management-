@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kredipal/controller/login-controller.dart';
 import 'package:kredipal/routes/app_routes.dart';
 import 'package:kredipal/views/apply_leave_screen.dart';
 import '../constant/app_color.dart';
 import '../widgets/profile_option_tile.dart';
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  ProfileScreen({super.key});
+  final AuthController authController = Get.find<AuthController>(); // ✅ Use Get.find
 
   @override
   Widget build(BuildContext context) {
@@ -15,83 +17,85 @@ class ProfileScreen extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-            decoration: BoxDecoration(
-             color: AppColor.appBarColor,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
+
+          Obx(()=>
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+                decoration: BoxDecoration(
+                  color: AppColor.appBarColor,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.teal.shade100,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Profile Image
+                    const CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.white,
+                    ),
+                    const SizedBox(height: 16),
+                    // Name
+                    Text(
+                      '${authController.userData['name']}',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    // Designation
+                    Text(
+                      '${authController.userData['designation']}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Contact Info
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.email, color: Colors.white70, size: 18),
+                        SizedBox(width: 6),
+                        Text(
+                          '${authController.userData['email']}',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.phone, color: Colors.white70, size: 18),
+                        SizedBox(width: 6),
+                        Text(
+                          '${authController.userData['phone'] ?? 'Phone Number'}',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.teal.shade100,
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Profile Image
-                const CircleAvatar(
-                  radius: 40,
-                  backgroundImage: NetworkImage(
-                    'https://images.unsplash.com/photo-1598618356794-eb1720430eb4?ixlib=rb-1.2.1&auto=format&fit=crop&w=870&q=80',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Name
-                const Text(
-                  'Shamim Miah',
-                  style: TextStyle(
-                    fontSize: 22,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
 
-                const SizedBox(height: 6),
-
-                // Designation
-                Text(
-                  'Project Manager',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white.withOpacity(0.9),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Contact Info
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.email, color: Colors.white70, size: 18),
-                    SizedBox(width: 6),
-                    Text(
-                      'shamimmiah@gmail.com',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.phone, color: Colors.white70, size: 18),
-                    SizedBox(width: 6),
-                    Text(
-                      '+91 9876543210',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ],
-            ),
           ),
           const SizedBox(height: 30),
           // Profile and Options
@@ -131,6 +135,14 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     OptionTile(
+                      icon: Icons.history,
+                      title: "Change Password",
+                      onTap: () {
+                        Get.toNamed(AppRoutes.password);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    OptionTile(
                       icon: Icons.edit,
                       title: "Edit Profile",
                       onTap: () {
@@ -142,12 +154,12 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.logout,
                       title: "Logout",
                       onTap: () {
-                        Get.offAllNamed(AppRoutes.login);
+                        authController.logoutUser();
                       },
                       iconColor: Colors.red,
                       textColor: Colors.red,
                     ),
-                    const SizedBox(height: 40), // for bottom padding
+                    const SizedBox(height: 100), // for bottom padding
                   ],
                 ),
               ),
