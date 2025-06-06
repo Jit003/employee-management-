@@ -1,182 +1,209 @@
-class AllTaskList {
-  String? status;
-  String? message;
-  List<Data>? data; // List of tasks
+import 'dart:convert';
 
-  AllTaskList({this.status, this.message, this.data});
+import 'package:flutter/material.dart';
 
-  AllTaskList.fromJson(Map<String, dynamic> json) {
-    status = json['status'];
-    message = json['message'];
-    if (json['data'] != null) {
-      data = <Data>[];
-      json['data'].forEach((v) {
-        data!.add(Data.fromJson(v));
-      });
+class Task {
+  final int id;
+  final int teamLeadId;
+  final int employeeId;
+  final String title;
+  final String description;
+  final String status;
+  final String createdAt;
+  final String updatedAt;
+  final int progress;
+  final String priority;
+  final List<ActivityItem> activityTimeline;
+  final String assignedDate;
+  final String? dueDate;
+  final List<String>? attachments;
+  final Employee employee;
+  final TeamLead teamLead;
+
+  Task({
+    required this.id,
+    required this.teamLeadId,
+    required this.employeeId,
+    required this.title,
+    required this.description,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.progress,
+    required this.priority,
+    required this.activityTimeline,
+    required this.assignedDate,
+    this.dueDate,
+    this.attachments,
+    required this.employee,
+    required this.teamLead,
+  });
+
+  factory Task.fromJson(Map<String, dynamic> json) {
+    // Parse activity timeline
+    List<ActivityItem> timeline = [];
+    if (json['activity_timeline'] != null) {
+      final List<dynamic> timelineJson = jsonDecode(json['activity_timeline']);
+      timeline = timelineJson.map((item) => ActivityItem.fromJson(item)).toList();
+    }
+
+    // Parse attachments
+    List<String>? attachments;
+    if (json['attachments'] != null && json['attachments'] != "null") {
+      final List<dynamic> attachmentsJson = jsonDecode(json['attachments']);
+      attachments = attachmentsJson.map((item) => item.toString()).toList();
+    }
+
+    return Task(
+      id: json['id'],
+      teamLeadId: json['team_lead_id'],
+      employeeId: json['employee_id'],
+      title: json['title'],
+      description: json['description'],
+      status: json['status'],
+      createdAt: json['created_at'],
+      updatedAt: json['updated_at'],
+      progress: json['progress'],
+      priority: json['priority'],
+      activityTimeline: timeline,
+      assignedDate: json['assigned_date'],
+      dueDate: json['due_date'],
+      attachments: attachments,
+      employee: Employee.fromJson(json['employee']),
+      teamLead: TeamLead.fromJson(json['team_lead']),
+    );
+  }
+
+  // Helper method to get status color
+  Color getStatusColor() {
+    switch (status) {
+      case 'completed':
+        return Colors.green;
+      case 'in_progress':
+        return Colors.blue;
+      case 'pending':
+        return Colors.orange;
+      default:
+        return Colors.grey;
     }
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> dataMap = {};
-    dataMap['status'] = status;
-    dataMap['message'] = message;
-    if (data != null) {
-      dataMap['data'] = data!.map((v) => v.toJson()).toList();
+  // Helper method to get priority color
+  Color getPriorityColor() {
+    switch (priority) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.orange;
+      case 'low':
+        return Colors.green;
+      default:
+        return Colors.grey;
     }
-    return dataMap;
+  }
+
+  // Helper method to get formatted status text
+  String getFormattedStatus() {
+    return status.replaceAll('_', ' ').toUpperCase();
+  }
+
+  // Helper method to get remaining days
+  int? getRemainingDays() {
+    if (dueDate == null) return null;
+
+    final due = DateTime.parse(dueDate!);
+    final now = DateTime.now();
+    return due.difference(now).inDays;
   }
 }
 
-class Data {
-  int? id;
-  int? teamLeadId;
-  int? employeeId;
-  String? title;
-  String? description;
-  String? status;
-  String? createdAt;
-  String? updatedAt;
-  int? progress;
-  String? priority;
-  String? activityTimeline;
-  String? assignedDate;
-  String? dueDate;
-  String? attachments;
-  Employee? employee;
-  Employee? teamLead;
+class ActivityItem {
+  final String timestamp;
+  final String action;
+  final int by;
+  final String note;
+  final List<String>? fieldsChanged;
 
-  Data(
-      {this.id,
-        this.teamLeadId,
-        this.employeeId,
-        this.title,
-        this.description,
-        this.status,
-        this.createdAt,
-        this.updatedAt,
-        this.progress,
-        this.priority,
-        this.activityTimeline,
-        this.assignedDate,
-        this.dueDate,
-        this.attachments,
-        this.employee,
-        this.teamLead});
+  ActivityItem({
+    required this.timestamp,
+    required this.action,
+    required this.by,
+    required this.note,
+    this.fieldsChanged,
+  });
 
-  Data.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    teamLeadId = json['team_lead_id'];
-    employeeId = json['employee_id'];
-    title = json['title'];
-    description = json['description'];
-    status = json['status'];
-    createdAt = json['created_at'];
-    updatedAt = json['updated_at'];
-    progress = json['progress'];
-    priority = json['priority'];
-    activityTimeline = json['activity_timeline'];
-    assignedDate = json['assigned_date'];
-    dueDate = json['due_date'];
-    attachments = json['attachments'];
-    employee = json['employee'] != null ? Employee.fromJson(json['employee']) : null;
-    teamLead = json['team_lead'] != null ? Employee.fromJson(json['team_lead']) : null;
-  }
+  factory ActivityItem.fromJson(Map<String, dynamic> json) {
+    List<String>? fields;
+    if (json['fields_changed'] != null) {
+      fields = List<String>.from(json['fields_changed']);
+    }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> dataMap = {};
-    dataMap['id'] = id;
-    dataMap['team_lead_id'] = teamLeadId;
-    dataMap['employee_id'] = employeeId;
-    dataMap['title'] = title;
-    dataMap['description'] = description;
-    dataMap['status'] = status;
-    dataMap['created_at'] = createdAt;
-    dataMap['updated_at'] = updatedAt;
-    dataMap['progress'] = progress;
-    dataMap['priority'] = priority;
-    dataMap['activity_timeline'] = activityTimeline;
-    dataMap['assigned_date'] = assignedDate;
-    dataMap['due_date'] = dueDate;
-    dataMap['attachments'] = attachments;
-    if (employee != null) dataMap['employee'] = employee!.toJson();
-    if (teamLead != null) dataMap['team_lead'] = teamLead!.toJson();
-    return dataMap;
+    return ActivityItem(
+      timestamp: json['timestamp'],
+      action: json['action'],
+      by: json['by'],
+      note: json['note'],
+      fieldsChanged: fields,
+    );
   }
 }
 
 class Employee {
-  int? id;
-  String? name;
-  String? email;
-  String? password;
-  String? phone;
-  String? designation;
-  dynamic department;
-  String? profilePhoto;
-  String? address;
-  dynamic panCard;
-  dynamic aadharCard;
-  dynamic signature;
-  dynamic createdBy;
-  int? teamLeadId;
-  String? createdAt;
-  String? updatedAt;
+  final int id;
+  final String name;
+  final String email;
+  final String phone;
+  final String designation;
+  final String? profilePhoto;
 
-  Employee(
-      {this.id,
-        this.name,
-        this.email,
-        this.password,
-        this.phone,
-        this.designation,
-        this.department,
-        this.profilePhoto,
-        this.address,
-        this.panCard,
-        this.aadharCard,
-        this.signature,
-        this.createdBy,
-        this.teamLeadId,
-        this.createdAt,
-        this.updatedAt});
+  Employee({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.designation,
+    this.profilePhoto,
+  });
 
-  Employee.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    name = json['name'];
-    email = json['email'];
-    password = json['password'];
-    phone = json['phone'];
-    designation = json['designation'];
-    department = json['department'];
-    profilePhoto = json['profile_photo'];
-    address = json['address'];
-    panCard = json['pan_card'];
-    aadharCard = json['aadhar_card'];
-    signature = json['signature'];
-    createdBy = json['created_by'];
-    teamLeadId = json['team_lead_id'];
-    createdAt = json['created_at'];
-    updatedAt = json['updated_at'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> dataMap = {};
-    dataMap['id'] = id;
-    dataMap['name'] = name;
-    dataMap['email'] = email;
-    dataMap['password'] = password;
-    dataMap['phone'] = phone;
-    dataMap['designation'] = designation;
-    dataMap['department'] = department;
-    dataMap['profile_photo'] = profilePhoto;
-    dataMap['address'] = address;
-    dataMap['pan_card'] = panCard;
-    dataMap['aadhar_card'] = aadharCard;
-    dataMap['signature'] = signature;
-    dataMap['created_by'] = createdBy;
-    dataMap['team_lead_id'] = teamLeadId;
-    dataMap['created_at'] = createdAt;
-    dataMap['updated_at'] = updatedAt;
-    return dataMap;
+  factory Employee.fromJson(Map<String, dynamic> json) {
+    return Employee(
+      id: json['id'],
+      name: json['name'],
+      email: json['email'],
+      phone: json['phone'] ?? '',
+      designation: json['designation'] ?? '',
+      profilePhoto: json['profile_photo'],
+    );
   }
 }
+
+class TeamLead {
+  final int id;
+  final String name;
+  final String email;
+  final String phone;
+  final String designation;
+  final String? profilePhoto;
+
+  TeamLead({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.designation,
+    this.profilePhoto,
+  });
+
+  factory TeamLead.fromJson(Map<String, dynamic> json) {
+    return TeamLead(
+      id: json['id'],
+      name: json['name'],
+      email: json['email'],
+      phone: json['phone'] ?? '',
+      designation: json['designation'] ?? '',
+      profilePhoto: json['profile_photo'],
+    );
+  }
+}
+
+// Don't forget to import this at the top

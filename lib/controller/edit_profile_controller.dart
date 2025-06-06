@@ -6,7 +6,7 @@ import '../services/api_services.dart';
 
 class ProfileUpdateController extends GetxController {
   final ApiService apiService = ApiService();
-  final AuthController authController = Get.put(AuthController());
+  final AuthController authController = Get.find<AuthController>(); // Right!
 
   var isUpdating = false.obs;
 
@@ -32,7 +32,7 @@ class ProfileUpdateController extends GetxController {
       // Update the user data in the AuthController
       authController.userData.value = result['user'];
 
-      Get.snackbar('Success', result['message'], backgroundColor: Colors.green, colorText: Colors.white);
+      Get.snackbar('Success ', result['message'], backgroundColor: Colors.green, colorText: Colors.white);
     } else {
       Get.snackbar('Error', result['message'], backgroundColor: Colors.redAccent, colorText: Colors.white);
     }

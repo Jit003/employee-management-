@@ -3,7 +3,11 @@ import 'package:get/get.dart';
 import 'package:kredipal/routes/app_pages.dart';
 import 'package:kredipal/routes/app_routes.dart';
 
+import 'controller/login-controller.dart';
+
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  Get.put<AuthController>(AuthController(), permanent: true); // 🔒 makes it globally available
   runApp(MyApp());
 }
 

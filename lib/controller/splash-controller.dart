@@ -1,15 +1,21 @@
 import 'package:get/get.dart';
 import 'package:kredipal/constant/app_images.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
-import '../routes/app_routes.dart'; // Import your route config
+
+import '../controller/login-controller.dart';
+import '../routes/app_routes.dart';
 
 class SplashController extends GetxController {
   late VideoPlayerController videoController;
   var isInitialized = false.obs;
 
+  final AuthController authController = Get.find<AuthController>();
+
   @override
   void onInit() {
     super.onInit();
+
     videoController = VideoPlayerController.asset(AppImages.splashVdo)
       ..initialize().then((_) {
         isInitialized.value = true;
@@ -25,8 +31,24 @@ class SplashController extends GetxController {
       });
   }
 
-  void navigateToNext() {
-    Get.offNamed(AppRoutes.login); // Navigate to login or your next screen
+  void navigateToNext() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token != null && token.isNotEmpty) {
+      authController.token.value = token;
+
+      try {
+        final profile = await authController.apiService.getUserProfile(token);
+        authController.userData.value = profile;
+        Get.offAllNamed(AppRoutes.home); // ✅ Go to home
+      } catch (e) {
+        Get.snackbar('Error', 'Failed to fetch user profile');
+        Get.offAllNamed(AppRoutes.login); // If API fails, fallback to login
+      }
+    } else {
+      Get.offAllNamed(AppRoutes.login); // ❌ No token, go to login
+    }
   }
 
   @override

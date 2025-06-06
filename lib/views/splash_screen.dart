@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kredipal/controller/login-controller.dart';
 import 'package:kredipal/controller/splash-controller.dart';
 import 'package:video_player/video_player.dart';
 
 class SplashScreen extends StatelessWidget {
   final SplashController controller = Get.put(SplashController());
+  final AuthController authController = Get.find<AuthController>();
 
   @override
   Widget build(BuildContext context) {

@@ -65,8 +65,8 @@ class LeadSavedSuccessScreen extends StatelessWidget {
                 onPressed: () {
                   Get.toNamed(AppRoutes.home);
                 },
-                icon: Icon(Icons.list_alt),
-                label: Text("Go to home"),
+                icon: const Icon(Icons.list_alt),
+                label: const Text("Go to home"),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: AppColor.appBarColor,

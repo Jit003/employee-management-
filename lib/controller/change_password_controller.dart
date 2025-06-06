@@ -10,7 +10,7 @@ class ChangePasswordController extends GetxController {
 
   var isLoading = false.obs;
   final ApiService apiService = ApiService();
-  final AuthController authController = Get.put(AuthController());
+  final authController = Get.find<AuthController>();
 
   Future<void> changePassword() async {
     isLoading.value = true;

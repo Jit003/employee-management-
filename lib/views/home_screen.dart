@@ -15,8 +15,8 @@ class HomeScreen extends StatelessWidget {
   final BottomNavController controller = Get.put(BottomNavController());
 
   final List<Widget> _pages = [
-    const DashboardScreen(),
-    AllLeadsScreen(),
+     DashboardScreen(),
+    const AllLeadsScreen(),
     AttendanceScreen(),
     ProfileScreen(),
 

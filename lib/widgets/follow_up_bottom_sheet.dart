@@ -93,7 +93,7 @@ class FollowUpBottomSheet extends StatelessWidget {
             }),
             const SizedBox(height: 15),
             CustomButton(
-              text: 'Save Follow-up',
+              text: 'Set Follow-up Reminder',
               onPressed: () {
                 final selectedDate = followUpController.selectedDate.value;
                 if (_formKey.currentState!.validate() && selectedDate != null) {
@@ -104,7 +104,7 @@ class FollowUpBottomSheet extends StatelessWidget {
                     followUpDate: selectedDate,
                   );
                   Get.back();
-                  Get.snackbar("Success", "Follow-up added",
+                  Get.snackbar("Success", "Set Follow-up Reminder Successfully",
                       backgroundColor: Colors.green.shade50,
                       colorText: Colors.black);
                 } else {

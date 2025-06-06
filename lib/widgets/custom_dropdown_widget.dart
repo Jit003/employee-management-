@@ -1,59 +1,79 @@
 import 'package:flutter/material.dart';
 
-class CustomDropdownField extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final String? value;
-  final List<String> items;
-  final Function(String?) onChanged;
-
-  const CustomDropdownField({
-    Key? key,
-    required this.label,
-    required this.icon,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100, // background color
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
+Widget buildEnhancedDropdown({
+  required String label,
+  required IconData icon,
+  required Color color,
+  required String value,
+  required List<String> items,
+  required Function(String?) onChanged,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey[700],
+        ),
       ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.black),
-          const SizedBox(width: 12),
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                isExpanded: true,
-                value: value == '' ? null : value,
-                items: items.map((String val) {
-                  return DropdownMenuItem<String>(
-                    value: val,
-                    child: Text(val),
-                  );
-                }).toList(),
-                onChanged: onChanged,
-                hint: Text(label),
-              ),
+      SizedBox(height: 8),
+      Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+        ),
+        child: DropdownButtonHideUnderline(
+          child:
+          DropdownButton<String>(
+            value: value.isEmpty ? null : value,
+            hint: Row(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(right: 12),
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                Text(
+                  'Select  $label',
+                  style: TextStyle(color: Colors.grey[400]),
+                ),
+              ],
             ),
+            icon: Icon(Icons.arrow_drop_down, color: Colors.grey[400]),
+            isExpanded: true,
+            items: items.map((String item) {
+              return DropdownMenuItem<String>(
+                value: item,
+                child: Row(
+                  children: [
+                    Container(
+                      margin: EdgeInsets.only(right: 12),
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, color: color, size: 20),
+                    ),
+                    Text(item),
+                  ],
+                ),
+              );
+            }).toList(),
+            onChanged: onChanged,
           ),
-        ],
+        ),
       ),
-    );
-  }
+    ],
+  );
 }

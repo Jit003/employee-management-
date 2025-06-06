@@ -22,17 +22,11 @@ import '../views/task_screen.dart';
 
 class AppPages {
   static final List<GetPage> appPages = [
-    GetPage(name: AppRoutes.splash, page: () => SplashScreen(),binding: BindingsBuilder(() {
-  // Register AuthController when SplashScreen is created
-  Get.lazyPut<AuthController>(() => AuthController());
-  }),
+    GetPage(name: AppRoutes.splash, page: () => SplashScreen(),
   ),
     GetPage(
       name: AppRoutes.login,
       page: () => LoginScreen(),
-      binding: BindingsBuilder(() {
-        Get.put(AuthController()); // use Get.put here (not lazyPut) to ensure fresh instance
-      }),
       transition: Transition.fadeIn,
       transitionDuration: Duration(milliseconds: 800),
     ),

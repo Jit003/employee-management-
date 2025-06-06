@@ -28,18 +28,17 @@ class AuthController extends GetxController {
     isLoading.value = false;
 
     if (result['success']) {
-      userData.value = result['user'];
       token.value = result['token'];
       // ✅ Save token using SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', result['token']);
 
-
-      Get.snackbar(backgroundColor: Colors.green,'Success', result['message']);
+      Get.snackbar(backgroundColor: Colors.green, 'Success', result['message']);
       Get.offNamed(AppRoutes.home);
       // Navigate to home/dashboard
     } else {
-      Get.snackbar('Error', result['message'], backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar('Error', result['message'],
+          backgroundColor: Colors.redAccent, colorText: Colors.white);
     }
   }
 
@@ -55,7 +54,9 @@ class AuthController extends GetxController {
     Get.offAllNamed(AppRoutes.login);
 
     // Optional: Show a message
-    Get.snackbar('Logged Out', 'You have been successfully logged out');
+    Get.snackbar(
+        backgroundColor: Colors.white,
+        'Logged Out',
+        'You have been successfully  logged out');
   }
-
 }
