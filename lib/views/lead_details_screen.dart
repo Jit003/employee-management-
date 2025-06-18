@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kredipal/views/edit_lead_screen.dart';
 import 'package:kredipal/widgets/custom_app_bar.dart';
 import 'package:kredipal/widgets/custom_button.dart';
 import 'package:kredipal/widgets/follow_up_bottom_sheet.dart';
 import '../models/all_leads_model.dart';
-import '../services/voice_service.dart';
 import 'lead_details_controller.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 
 class LeadDetailsScreen extends StatelessWidget {
   const LeadDetailsScreen({Key? key}) : super(key: key);
@@ -17,175 +16,249 @@ class LeadDetailsScreen extends StatelessWidget {
     final LeadDetailsController controller = Get.put(LeadDetailsController());
 
     Future<void> makePhoneCall(String phoneNumber) async {
-      var _url = Uri.parse('tel:${controller.leadDetails.value!.phone}');
+      var _url = Uri.parse('tel:$phoneNumber');
       if (!await launchUrl(_url, mode: LaunchMode.externalApplication)) {
-        throw Exception('Could not launch $_url');
+        Get.snackbar('Error', 'Could not launch phone call',
+            backgroundColor: Colors.red, colorText: Colors.white);
       }
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      appBar: CustomAppBar(title: '${controller.leadDetails.value!.name}',
-      ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
-            ),
-          );
-        }
-
-        if (controller.leadDetails.value == null) {
-          return const Center(
-            child: Text(
-              'No lead details available',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+    return Obx((){
+      if(controller.isLoading.value){
+        return Scaffold(
+          appBar:CustomAppBar(title:''),
+          body:Center(
+            child: CircularProgressIndicator(),
+          )
+        );
+      }
+      return Scaffold(
+        backgroundColor: const Color(0xFFF5F7FA),
+        appBar: CustomAppBar(
+          title: controller.leadDetails.value?.name ?? 'Lead Details',
+          actions: [
+            Obx(() {
+              final lead = controller.leadDetails.value;
+              if (lead == null || !lead.isPersonalLead!) {
+                return const SizedBox.shrink();
+              }
+              return TextButton(
+                onPressed: () {
+                  Get.to(() => EditLeadsPage(leadId: lead!.id!));
+                },
+                child: Center(
+                  child: const Text(
+                    'Edit',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+        body: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
               ),
-            ),
-          );
-        }
+            );
+          }
 
-        final lead = controller.leadDetails.value!;
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Lead Header Card
-              _buildHeaderCard(lead, controller),
-
-              const SizedBox(height: 16),
-
-
-          // Personal Information
-              _buildSectionCard(
-                title: 'Personal Information',
-                icon: Icons.person,
-                children: [
-                  _buildDetailRow('Full Name', lead.name ?? 'N/A'),
-                  _buildDetailRow('Email', lead.email ?? 'N/A'),
-                  _buildDetailRow('Phone', lead.phone ?? 'N/A'),
-                  _buildDetailRow('Date of Birth', controller.formatDate(lead.dob)),
-                  _buildDetailRow('Location', lead.location ?? 'N/A'),
-                ],
+          if (controller.leadDetails.value == null) {
+            return const Center(
+              child: Text(
+                'No lead details available',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
               ),
+            );
+          }
 
-              const SizedBox(height: 16),
+          final lead = controller.leadDetails.value!;
 
-              // Financial Information
-              _buildSectionCard(
-                title: 'Financial Information',
-                icon: Icons.account_balance_wallet,
-                children: [
-                  _buildDetailRow('Lead Amount', controller.formatCurrency(lead.leadAmount)),
-                  _buildDetailRow('Current Salary', controller.formatCurrency(lead.salary)),
-                  _buildDetailRow('Success Percentage', '${lead.successPercentage ?? 0}%'),
-                  _buildDetailRow('Expected Month', lead.expectedMonth ?? 'N/A'),
-                  _buildDetailRow('Lead Type', (lead.leadType ?? 'N/A').replaceAll('_', ' ').toUpperCase()),
-                ],
-              ),
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Lead Header Card
+                _buildHeaderCard(lead, controller),
 
-              const SizedBox(height: 16),
-
-              // Company Information
-              _buildSectionCard(
-                title: 'Company Information',
-                icon: Icons.business,
-                children: [
-                  _buildDetailRow('Company Name', lead.companyName ?? 'N/A'),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Team Information
-              _buildSectionCard(
-                title: 'Team Information',
-                icon: Icons.group,
-                children: [
-                  _buildDetailRow('Employee', lead.employee?.name ?? 'N/A'),
-                  _buildDetailRow('Employee Email', lead.employee?.email ?? 'N/A'),
-                  _buildDetailRow('Team Lead', lead.teamLead?.name ?? 'N/A'),
-                  _buildDetailRow('Team Lead Phone', lead.teamLead?.phone ?? 'N/A'),
-                ],
-              ),
-
-              if (lead.remarks != null && lead.remarks!.isNotEmpty) ...[
                 const SizedBox(height: 16),
 
-                // Remarks
+                // Personal Information
                 _buildSectionCard(
-                  title: 'Remarks',
-                  icon: Icons.note,
+                  title: 'Personal Information',
+                  icon: Icons.person,
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[200]!),
-                      ),
-                      child: Text(
-                        lead.remarks!,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF2C3E50),
-                          height: 1.5,
+                    _buildDetailRow('Full Name', lead.name ?? 'N/A'),
+                    _buildDetailRow('Email', lead.email ?? 'N/A'),
+                    _buildDetailRow('Phone', lead.phone ?? 'N/A'),
+                    _buildDetailRow(
+                        'Date of Birth', controller.formatDate(lead.dob)),
+                    _buildDetailRow('Location', lead.location ?? 'N/A'),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Financial Information
+                _buildSectionCard(
+                  title: 'Financial Information',
+                  icon: Icons.account_balance_wallet,
+                  children: [
+                    _buildDetailRow('Lead Amount',
+                        controller.formatCurrency(lead.leadAmount)),
+                    _buildDetailRow(
+                        'Current Salary', controller.formatCurrency(lead.salary)),
+                    _buildDetailRow(
+                        'Success Percentage', '${lead.successPercentage ?? 0}%'),
+                    _buildDetailRow(
+                        'Expected Month', lead.expectedMonth ?? 'N/A'),
+                    _buildDetailRow(
+                        'Lead Type',
+                        (lead.leadType ?? 'N/A')
+                            .replaceAll('_', ' ')
+                            .toUpperCase()),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Company Information
+                _buildSectionCard(
+                  title: 'Company Information',
+                  icon: Icons.business,
+                  children: [
+                    _buildDetailRow('Company Name', lead.companyName ?? 'N/A'),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Team Information
+                _buildSectionCard(
+                  title: 'Team Information',
+                  icon: Icons.group,
+                  children: [
+                    _buildDetailRow('Employee', lead.employee?.name ?? 'N/A'),
+                    _buildDetailRow(
+                        'Employee Email', lead.employee?.email ?? 'N/A'),
+                    _buildDetailRow('Team Lead', lead.teamLead?.name ?? 'N/A'),
+                    _buildDetailRow(
+                        'Team Lead Phone', lead.teamLead?.phone ?? 'N/A'),
+                  ],
+                ),
+
+                if (lead.remarks != null && lead.remarks!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  // Remarks
+                  _buildSectionCard(
+                    title: 'Remarks',
+                    icon: Icons.note,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey[200]!),
                         ),
+                        child: Text(
+                          lead.remarks!,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF2C3E50),
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
+                const SizedBox(height: 16),
+
+                // Timestamps
+                _buildSectionCard(
+                  title: 'Timeline',
+                  icon: Icons.schedule,
+                  children: [
+                    _buildDetailRow(
+                        'Created At', controller.formatDate(lead.createdAt)),
+                    _buildDetailRow(
+                        'Updated At', controller.formatDate(lead.updatedAt)),
+                  ],
+                ),
+
+                const SizedBox(height: 32),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomButton(
+                        text: 'Call',
+                        onPressed: () {
+                          makePhoneCall('+91${lead.phone}');
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: CustomButton(
+                        text: 'Follow Up',
+                        onPressed: () {
+                          Get.bottomSheet(
+                            FollowUpBottomSheet(leadId: lead.id.toString()),
+                            isScrollControlled: true,
+                            backgroundColor: Colors.white,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(20),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 10),
+                CustomButton(
+                  text: lead.isPersonalLead! ? 'Forward To TL' : 'Forwarded',
+                  onPressed: () {
+                    if (lead.isPersonalLead!) {
+                      Get.snackbar(
+                        'Success',
+                        'Forwarded Successfully',
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                      );
+                    } else {
+                      Get.snackbar(
+                        'Info',
+                        'This lead has already been forwarded',
+                        backgroundColor: Colors.blue,
+                        colorText: Colors.white,
+                      );
+                    }
+                  },
+                ),
               ],
+            ),
+          );
+        }),
+      );
 
-              const SizedBox(height: 16),
+    });
 
-              // Timestamps
-              _buildSectionCard(
-                title: 'Timeline',
-                icon: Icons.schedule,
-                children: [
-                  _buildDetailRow('Created At', controller.formatDate(lead.createdAt)),
-                  _buildDetailRow('Updated At', controller.formatDate(lead.updatedAt)),
-                ],
-              ),
-
-              const SizedBox(height: 32),
-
-              Row(
-                children: [
-                  Expanded(child: CustomButton(text: 'Call', onPressed: (){
-
-                    makePhoneCall('+91${lead.phone.toString()}');
-
-                  })),
-                  const SizedBox(width: 5,),
-                  Expanded(child: CustomButton(text: 'Follow Up', onPressed: (){
-                    Get.bottomSheet(
-                      FollowUpBottomSheet(leadId: '3'),
-                      isScrollControlled: true,
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                      ),
-                    );
-                  }))
-                ],
-              ),
-              const SizedBox(height: 10),
-              CustomButton(text: 'Forward To TL', onPressed: (){
-                Get.snackbar('Success', 'Forwarded Successfully',backgroundColor: Colors.green);
-              })
-            ],
-          ),
-        );
-      }),
-    );
   }
 
   Widget _buildHeaderCard(Leads lead, LeadDetailsController controller) {
@@ -241,7 +314,8 @@ class LeadDetailsScreen extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -258,9 +332,7 @@ class LeadDetailsScreen extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 20),
-
           Row(
             children: [
               Expanded(
@@ -417,6 +489,4 @@ class LeadDetailsScreen extends StatelessWidget {
       ),
     );
   }
-
-
 }

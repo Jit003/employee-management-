@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kredipal/constant/app_color.dart';
+import 'package:kredipal/constant/app_images.dart';
 import 'package:kredipal/controller/allleads_controller.dart';
 import 'package:kredipal/controller/login-controller.dart';
 import 'package:kredipal/views/add_leads.dart';
 
+import '../controller/dashboard_controller.dart';
+import '../widgets/shimmer_widget.dart';
 import 'emi_cal_page.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -19,32 +22,11 @@ class _EnhancedDashboardScreenState extends State<DashboardScreen>
   late PageController _motivationController;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  int _currentQuoteIndex = 0;
   final AllLeadsController leadsController = Get.put(AllLeadsController());
   final AuthController authController = Get.find<AuthController>();
+  final DashboardController dashboardController = Get.put(DashboardController());
 
-  final List<Map<String, dynamic>> _motivationalQuotes = [
-    {
-      "text": "Your financial freedom starts with a single step forward! 💪",
-      "author": "Finance Wisdom"
-    },
-    {
-      "text": "Every loan approved brings dreams closer to reality! 🌟",
-      "author": "Success Mantra"
-    },
-    {
-      "text": "Success in finance is built on trust and dedication! 🏆",
-      "author": "Professional Ethics"
-    },
-    {
-      "text": "Today's effort is tomorrow's financial security! 💰",
-      "author": "Investment Philosophy"
-    },
-    {
-      "text": "Excellence in service creates lasting relationships! 🤝",
-      "author": "Customer First"
-    },
-  ];
+
 
   @override
   void initState() {
@@ -58,20 +40,9 @@ class _EnhancedDashboardScreenState extends State<DashboardScreen>
       CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
     );
     _fadeController.forward();
-    _startQuoteRotation();
   }
 
-  void _startQuoteRotation() {
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
-        setState(() {
-          _currentQuoteIndex =
-              (_currentQuoteIndex + 1) % _motivationalQuotes.length;
-        });
-        _startQuoteRotation();
-      }
-    });
-  }
+
 
   @override
   void dispose() {
@@ -187,8 +158,42 @@ class _EnhancedDashboardScreenState extends State<DashboardScreen>
                   horizontal: horizontalPadding, vertical: 12),
               child: Column(
                 children: [
-                  // Enhanced Motivation Section
-                  _buildEnhancedMotivationSection(),
+
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _buildFilterButton('ALL', 'all', dashboardController),
+                              _buildFilterButton('PL', 'personal_loan', dashboardController),
+                              _buildFilterButton('BL', 'business_loan', dashboardController),
+                              _buildFilterButton('HL', 'home_loan', dashboardController),
+                              _buildFilterButton('CCL', 'creditcard_loan', dashboardController),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 5,),
+                      SizedBox(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildDateFilterDropdown(dashboardController),
+                            Expanded(child: _buildDateRangeSection(dashboardController)),
+                          ],
+                        ),
+                      )
+
+                    ],
+                  ),
+
+
+
+                  // lead status Section
                   _buildEnhancedLeadStatusSection(isTablet),
                   // Loan Products Section
                   _buildEnhancedLoanProductsSection(isTablet),
@@ -231,9 +236,9 @@ class _EnhancedDashboardScreenState extends State<DashboardScreen>
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 3),
           ),
-          child: CircleAvatar(
+          child: const CircleAvatar(
             radius: 28,
-            backgroundImage: NetworkImage('${authController.userData['profile_photo']}'),
+            backgroundImage: AssetImage(AppImages.profileImg),
           ),
         ),
         const SizedBox(width: 16),
@@ -241,22 +246,23 @@ class _EnhancedDashboardScreenState extends State<DashboardScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Welcome back!',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.white70,
                 ),
               ),
-              SizedBox(height: 4),
-              Text(
-                '${authController.userData['name']}',
-                style: TextStyle(
+              const SizedBox(height: 4),
+              Obx(() => Text(
+                dashboardController.dashboardData.value.data?.user?.name ?? '',
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
-              ),
+              )),
+
             ],
           ),
         ),
@@ -264,185 +270,209 @@ class _EnhancedDashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildEnhancedMotivationSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.amber.shade50,
-            Colors.orange.shade50,
+  Widget _buildFilterButton(String label, String leadTypeValue, DashboardController controller) {
+    return Obx(() => GestureDetector(
+      onTap: () {
+        controller.selectedLeadType.value = leadTypeValue;
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          color: controller.selectedLeadType.value == leadTypeValue
+              ? Colors.blue
+              : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: controller.selectedLeadType.value == leadTypeValue
+                ? Colors.blue
+                : Colors.grey.shade400,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 3,
+              offset: Offset(0, 2),
+            )
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.orange.shade100),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.orange.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: controller.selectedLeadType.value == leadTypeValue
+                ? Colors.white
+                : Colors.black87,
+            fontWeight: FontWeight.w500,
           ),
-        ],
+        ),
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.orange.shade400, Colors.orange.shade600],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.orange.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.lightbulb_outline_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Daily Motivation',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF92400E),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 500),
-                      child: Text(
-                        _motivationalQuotes[_currentQuoteIndex]['text'],
-                        key: ValueKey(_currentQuoteIndex),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1E293B),
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '- ${_motivationalQuotes[_currentQuoteIndex]['author']}',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.orange.shade700,
-                ),
-              ),
-              Row(
-                children: List.generate(
-                  _motivationalQuotes.length,
-                  (index) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: index == _currentQuoteIndex
-                          ? Colors.orange.shade600
-                          : Colors.orange.shade300,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+    ));
   }
 
-  Widget _buildEnhancedLoanProductsSection(bool isTablet) {
-    final loanProducts = [
-      {
-        'title': 'Personal Loan',
-        'subtitle': 'Quick approval in 24hrs',
-        'icon': Icons.person_outline_rounded,
-        'color': const Color(0xFF3B82F6),
-        'rate': '10.5% onwards',
-        'features': ['No collateral', 'Instant approval'],
-        'onTap': () => Get.to(() => AddLeadsPage(preselectedLeadType: 'personal_loan',)),
+  Widget _buildDateRangeSection(DashboardController controller) {
+    return Obx(() {
+      if (controller.dateFilter.value != 'date_range') return SizedBox.shrink(); // hide if not selected
 
-      },
-      {
-        'title': 'Business Loan',
-        'subtitle': 'Grow your business',
-        'icon': Icons.business_center_outlined,
-        'color': const Color(0xFF10B981),
-        'onTap': () => Get.to(() => AddLeadsPage(preselectedLeadType: 'business_loan',)),
-
-      },
-      {
-        'title': 'Home Loan',
-        'subtitle': 'Dream home awaits',
-        'icon': Icons.home_outlined,
-        'color': const Color(0xFFF59E0B),
-        'onTap': () => Get.to(() => AddLeadsPage(preselectedLeadType: 'home_loan',)),
-
-      },
-      {
-        'title': 'Credit Card',
-        'subtitle': 'Instant approval',
-        'icon': Icons.credit_card_outlined,
-        'color': const Color(0xFF8B5CF6),
-        'onTap': () => Get.to(() => AddLeadsPage(preselectedLeadType: 'credit_card_loan',)),
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1E293B),
+      return Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () async {
+                DateTime? picked = await showDatePicker(
+                  context: Get.context!,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                if (picked != null) {
+                  controller.startDate.value = picked.toIso8601String().split('T')[0];
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                margin: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Obx(() => Text(
+                  controller.startDate.value.isEmpty
+                      ? "Start Date"
+                      : controller.startDate.value,
+                )),
+              ),
+            ),
           ),
-        ),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isTablet ? 4 : 2,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 10,
-            childAspectRatio: isTablet ? 0.9 : 1,
+          Expanded(
+            child: GestureDetector(
+              onTap: () async {
+                DateTime? picked = await showDatePicker(
+                  context: Get.context!,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                if (picked != null) {
+                  controller.endDate.value = picked.toIso8601String().split('T')[0];
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                margin: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Obx(() => Text(
+                  controller.endDate.value.isEmpty
+                      ? "End Date"
+                      : controller.endDate.value,
+                )),
+              ),
+            ),
           ),
-          itemCount: loanProducts.length,
-          itemBuilder: (context, index) {
-            final product = loanProducts[index];
-            return _buildEnhancedLoanProductCard(product);
-          },
-        ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildDateFilterDropdown(DashboardController controller) {
+    return Obx(() => DropdownButton<String>(
+      value: controller.dateFilter.value,
+      items: [
+        DropdownMenuItem(value: 'date_range', child: Text('Date Range')),
+        DropdownMenuItem(value: 'this_year', child: Text('This Year')),
+        // DropdownMenuItem(value: 'this_week', child: Text('This Week')),
+        DropdownMenuItem(value: 'this_month', child: Text('This Month')),
       ],
-    );
+      onChanged: (val) {
+        if (val != null) controller.dateFilter.value = val;
+      },
+    ));
+  }
+
+
+
+
+
+
+  Widget _buildEnhancedLoanProductsSection(bool isTablet) {
+    return Obx(() {
+
+      if (dashboardController.isLoading.value) {
+        return const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      final dashboardData = dashboardController.dashboardData.value.data;
+      final personalLoanAmount = dashboardData?.leadTypeBreakdown?.personalLoan?.totalAmount ?? 0;
+      final businessLoanAmount = dashboardData?.leadTypeBreakdown?.businessLoan?.totalAmount ?? 0;
+      final homeLoanAmount = dashboardData?.leadTypeBreakdown?.homeLoan?.totalAmount ?? 0;
+      final creditCardLoanAmount = dashboardData?.leadTypeBreakdown?.creditCard?.totalAmount ?? 0;
+
+      final loanProducts = [
+        {
+          'title': 'Personal Loan',
+          'subtitle': _formatCurrency(personalLoanAmount),
+          'icon': Icons.person_outline_rounded,
+          'color': const Color(0xFF3B82F6),
+          'rate': '10.5% onwards',
+          'features': ['No collateral', 'Instant approval'],
+          'onTap': () => Get.to(() => AddLeadsPage(preselectedLeadType: 'personal_loan')),
+        },
+        {
+          'title': 'Business Loan',
+          'subtitle': _formatCurrency(businessLoanAmount),
+          'icon': Icons.business_center_outlined,
+          'color': const Color(0xFF10B981),
+          'onTap': () => Get.to(() => AddLeadsPage(preselectedLeadType: 'business_loan')),
+        },
+        {
+          'title': 'Home Loan',
+          'subtitle': _formatCurrency(homeLoanAmount),
+          'icon': Icons.home_outlined,
+          'color': const Color(0xFFF59E0B),
+          'onTap': () => Get.to(() => AddLeadsPage(preselectedLeadType: 'home_loan')),
+        },
+        {
+          'title': 'Credit  Card',
+          'subtitle': _formatCurrency(creditCardLoanAmount),
+          'icon': Icons.credit_card_outlined,
+          'color': const Color(0xFF8B5CF6),
+          'onTap': () => Get.to(() => AddLeadsPage(preselectedLeadType: 'creditcard_loan')),
+        },
+      ];
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Quick Actions',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: isTablet ? 4 : 2,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 10,
+              childAspectRatio: isTablet ? 0.9 : 1,
+            ),
+            itemCount: loanProducts.length,
+            itemBuilder: (context, index) {
+              final product = loanProducts[index];
+              return _buildEnhancedLoanProductCard(product);
+            },
+          ),
+        ],
+      );
+    });
   }
 
   Widget _buildEnhancedLoanProductCard(Map<String, dynamic> product) {
@@ -523,7 +553,7 @@ class _EnhancedDashboardScreenState extends State<DashboardScreen>
         'onTap': () => Get.to(() => EmiCalculatorPage()),
       },
       {
-        'title': 'Credit Score',
+        'title': 'Credit Card',
         'icon': Icons.credit_score_outlined,
         'color': const Color(0xFF10B981),
         'onTap': () => _showComingSoon('Credit Score Checker'),
@@ -642,66 +672,115 @@ class _EnhancedDashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _buildEnhancedLeadStatusSection(bool isTablet) {
-    final leadStats = [
-      {
-        'title': 'Total Leads',
-        'count': leadsController.aggregates.value?.totalLeads?.count?.toString() ?? '0',
-        'amount': leadsController.aggregates.value?.totalLeads?.totalAmount?.toString() ?? '0',
-        'icon': Icons.assessment_outlined,
-        'color': const Color(0xFF3B82F6),
-        'percentage': 100.0,
-        'trend': '+5.2%',
-      },
-      {
-        'title': 'Approved Leads',
-        'count': leadsController.aggregates.value?.approvedLeads?.count?.toString() ?? '0',
-        'amount': leadsController.aggregates.value?.approvedLeads?.totalAmount?.toString() ?? '0',
-        'icon': Icons.check_circle_outline,
-        'color': const Color(0xFF10B981),
-        'percentage': 62.2,
-        'trend': '+12.8%',
-      },
-      {
-        'title': 'Disbursed Leads',
-        'count': leadsController.aggregates.value?.disbursedLeads?.count?.toString() ?? '0',
-        'amount': leadsController.aggregates.value?.disbursedLeads?.totalAmount?.toString() ?? '0',
-        'icon': Icons.check_circle_outline,
-        'color': const Color(0xFF10B981),
-        'percentage': 62.2,
-        'trend': '+12.8%',
-      },
-      {
-        'title': 'Login Leads',
-        'count': leadsController.aggregates.value?.pendingLeads?.count?.toString() ?? '0',
-        'amount': leadsController.aggregates.value?.pendingLeads?.totalAmount?.toString() ?? '0',
-        'icon': Icons.login_outlined,
-        'color': const Color(0xFFF59E0B),
-        'percentage': 17.8,
-        'trend': '+3.1%',
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GridView.builder(
+    return Obx(() {
+      if (dashboardController.isLoading.value) {
+        return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: isTablet ? 4 : 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: isTablet ? 1.1 : 0.8,
+            childAspectRatio: isTablet ? 1.1 : 0.9,
           ),
-          itemCount: leadStats.length,
+          itemCount: 4,
           itemBuilder: (context, index) {
-            final stat = leadStats[index];
-            return _buildEnhancedLeadStatCard(stat);
+            return const LeadStatShimmer();
           },
-        ),
-      ],
-    );
+        );
+      }
+
+      final aggregates = dashboardController.dashboardData.value.data?.aggregates;
+
+      if (aggregates == null) {
+        return const Center(child: Text('No data available'));
+      }
+
+      final leadStats = [
+        {
+          'title': 'Personal Leads',
+          'count': aggregates.totalLeads?.count?.toString() ?? '0',
+          'amount': dashboardController.formatCurrency(
+              aggregates.totalLeads?.totalAmount?.toString() ?? '0'),
+          'icon': Icons.assessment_outlined,
+          'color': const Color(0xFF3B82F6),
+          'percentage': 100.0,
+          'trend': '+5.2',
+        },
+        {
+          'title': 'Authorized Leads',
+          'count': 1,
+          'amount': dashboardController.formatCurrency(
+              aggregates.totalLeads?.totalAmount?.toString() ?? '0'),
+          'icon': Icons.assessment_outlined,
+          'color': const Color(0xFF3B82F6),
+          'percentage': 100.0,
+          'trend': '+5.2',
+        },
+        {
+          'title': 'Approved Leads',
+          'count': aggregates.approvedLeads?.count?.toString() ?? '0',
+          'amount': dashboardController.formatCurrency(
+              aggregates.approvedLeads?.totalAmount?.toString() ?? '0'),
+          'icon': Icons.check_circle_outline,
+          'color': const Color(0xFF10B981),
+          'percentage': 62.2,
+          'trend': '+12.8%',
+        },
+        {
+          'title': 'Disbursed Leads',
+          'count': aggregates.disbursedLeads?.count?.toString() ?? '0',
+          'amount': dashboardController.formatCurrency(
+              aggregates.disbursedLeads?.totalAmount?.toString() ?? '0'),
+          'icon': Icons.check_circle_outline,
+          'color': const Color(0xFF10B981),
+          'percentage': 30.5,
+          'trend': '+4.3%',
+        },
+        {
+          'title': 'Login Leads',
+          'count': aggregates.pendingLeads?.count?.toString() ?? '0',
+          'amount': dashboardController.formatCurrency(
+              aggregates.pendingLeads?.totalAmount?.toString() ?? '0'),
+          'icon': Icons.login_outlined,
+          'color': const Color(0xFFF59E0B),
+          'percentage': 17.8,
+          'trend': '+3.1%',
+        },
+        {
+          'title': 'Rejected Leads',
+          'count': aggregates.rejectedLeads?.count?.toString() ?? '0',
+          'amount': dashboardController.formatCurrency(
+              aggregates.rejectedLeads?.totalAmount?.toString() ?? '0'),
+          'icon': Icons.cancel,
+          'color': const Color(0xFFFF0000), // Changed to red
+          'percentage': 17.8,
+          'trend': '+3.1%',
+        },
+      ];
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: isTablet ? 4 : 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: isTablet ? 1.1 : 0.8,
+            ),
+            itemCount: leadStats.length,
+            itemBuilder: (context, index) {
+              final stat = leadStats[index];
+              return _buildEnhancedLeadStatCard(stat);
+            },
+          ),
+        ],
+      );    });
   }
+
 
   Widget _buildEnhancedLeadStatCard(Map<String, dynamic> stat) {
     return Container(
@@ -782,36 +861,6 @@ class _EnhancedDashboardScreenState extends State<DashboardScreen>
           ),
           const SizedBox(height: 8),
           // Enhanced Progress bar
-          Container(
-            height: 6,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(3),
-            ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: stat['percentage'] / 100,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      stat['color'].withOpacity(0.7),
-                      stat['color'],
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${stat['percentage'].toStringAsFixed(1)}% of target',
-            style: const TextStyle(
-              fontSize: 10,
-              color: Color(0xFF64748B),
-            ),
-          ),
         ],
       ),
     );
@@ -1193,4 +1242,23 @@ class _EnhancedDashboardScreenState extends State<DashboardScreen>
       ),
     );
   }
+
+  String _formatCurrency(dynamic amount) {
+    if (amount == null) return '₹0';
+    try {
+      double value = amount is String ? double.parse(amount) : amount.toDouble();
+      if (value >= 10000000) {
+        return '₹${(value / 10000000).toStringAsFixed(1)}Cr';
+      } else if (value >= 100000) {
+        return '₹${(value / 100000).toStringAsFixed(1)}L';
+      } else if (value >= 1000) {
+        return '₹${(value / 1000).toStringAsFixed(1)}K';
+      } else {
+        return '₹${value.toStringAsFixed(0)}';
+      }
+    } catch (_) {
+      return '₹0';
+    }
+  }
+
 }

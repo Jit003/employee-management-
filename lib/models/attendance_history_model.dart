@@ -94,5 +94,4 @@ class AttendanceRecord {
       workedHours: json['worked_hours']?.toString(),
     );
   }
-
 }

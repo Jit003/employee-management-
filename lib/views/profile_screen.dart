@@ -4,11 +4,14 @@ import 'package:kredipal/controller/login-controller.dart';
 import 'package:kredipal/routes/app_routes.dart';
 import 'package:kredipal/views/apply_leave_screen.dart';
 import '../constant/app_color.dart';
+import '../controller/user_profile_controller.dart';
 import '../widgets/profile_option_tile.dart';
 
 class ProfileScreen extends StatelessWidget {
   ProfileScreen({super.key});
   final AuthController authController = Get.find<AuthController>();
+  final userController = Get.put(UserController());
+
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +36,7 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   // Profile Avatar
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly ,
                     children: [
                       CircleAvatar(
                         radius: 50,
@@ -63,10 +66,10 @@ class ProfileScreen extends StatelessWidget {
                                 letterSpacing: 0.5,
                               ),
                             ),
-                        
+
                             // Designation
                             Text(
-                              '(${authController.userData['designation']})',
+                              '(${authController.userData['designation']}',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -87,8 +90,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   _buildContactCard(
                     Icons.phone_outlined,
-                    '${authController.userData['phone'] ?? 'Not provided'}',
+                    '${authController.userData['phone']}',
                   ),
+
                 ],
               ),
             )),

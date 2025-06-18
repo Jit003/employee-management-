@@ -1,108 +1,95 @@
 import 'package:flutter/material.dart';
-import 'package:kredipal/constant/app_color.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:kredipal/widgets/custom_app_bar.dart';
-import 'package:kredipal/widgets/custom_button.dart';
+import '../controller/salary_slip_controller.dart';
+import '../models/salary_slip_model.dart';
+import '../widgets/salary_slip_widget/salary_slip_card.dart';
 
 class SalarySlipScreen extends StatelessWidget {
-  const SalarySlipScreen({super.key});
+  const SalarySlipScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final salaryDetails = {
-      'Employee Name': 'Dillip Kumar Pradhan',
-      'Designation': 'Flutter Developer',
-      'Month': 'May 2025',
-      'Employee ID': 'KP1023',
-      'Basic Salary': 25000,
-      'HRA': 10000,
-      'Other Allowances': 5000,
-      'Deductions': 3000,
-      'Net Salary': 37000,
-    };
+    final SalarySlipController controller = Get.put(SalarySlipController());
 
     return Scaffold(
-     appBar: CustomAppBar(title: 'Salary Slip'),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.teal.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.teal, width: 1.2),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Employee Name: ${salaryDetails['Employee Name']}',
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  Text('Designation: ${salaryDetails['Designation']}'),
-                  Text('Month: ${salaryDetails['Month']}'),
-                  Text('Employee ID: ${salaryDetails['Employee ID']}'),
-                ],
-              ),
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: CustomAppBar(title: 'Salary Slips',actions: [
+        IconButton(onPressed: (){
+          controller.getSalarySlip();
+        }, icon: Icon(Icons.refresh))
+      ],),
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1565C0)),
             ),
-            const SizedBox(height: 20),
+          );
+        }
 
-            // Salary Breakdown
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(children: [
-                  buildRow(
-                      'Basic Salary', salaryDetails['Basic Salary'] as int),
-                  buildRow('HRA', salaryDetails['HRA'] as int),
-                  buildRow('Other Allowances',
-                      salaryDetails['Other Allowances'] as int),
-                  const Divider(height: 24, thickness: 1),
-                  buildRow('Deductions', salaryDetails['Deductions'] as int,
-                      isNegative: true),
-                  const Divider(height: 24, thickness: 1),
-                  buildRow('Net Salary', salaryDetails['Net Salary'] as int,
-                      isBold: true),
-                ]),
-              ),
-            ),
+        if (controller.slipList.isEmpty) {
+          return _buildEmptyState();
+        }
 
-            const SizedBox(height: 30),
-
-            // Download/Share Button
-          CustomButton(text: 'Download Pdf', onPressed: (){})
-          ],
-        ),
-      ),
+        return RefreshIndicator(
+          onRefresh: () => controller.getSalarySlip(),
+          color: const Color(0xFF1565C0),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: controller.slipList.length,
+            itemBuilder: (context, index) {
+              return ClassicSalarySlipCard(
+                slip: controller.slipList[index],
+              );
+            },
+          ),
+        );
+      }),
     );
   }
 
-  Widget buildRow(String label, int value,
-      {bool isNegative = false, bool isBold = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(label,
-              style: TextStyle(
-                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                fontSize: isBold ? 16 : 14,
-              )),
+          Icon(
+            Icons.receipt_long,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
           Text(
-            '${isNegative ? '-' : ''}₹$value',
+            'No Salary Slips Found',
             style: TextStyle(
-              color: isNegative ? Colors.red : Colors.black,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              fontSize: isBold ? 16 : 14,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your salary slips will appear here',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
             ),
           ),
         ],
       ),
     );
+  }
+
+
+  String _formatMonth(String monthString) {
+    if (monthString.isEmpty) return 'N/A';
+    try {
+      final date = DateTime.parse(monthString);
+      return DateFormat('MMMM yyyy').format(date);
+    } catch (e) {
+      return monthString;
+    }
   }
 }

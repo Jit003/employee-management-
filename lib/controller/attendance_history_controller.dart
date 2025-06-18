@@ -5,10 +5,9 @@ import '../models/attendance_history_model.dart';
 import '../services/attendance_history_api_services.dart';
 
 class AttendanceHistoryController extends GetxController {
-  final AttendanceHistoryApiService _apiService = Get.put(AttendanceHistoryApiService());
+  final AttendanceHistoryApiService _apiService =
+  Get.put(AttendanceHistoryApiService());
   final AuthController authController = Get.find<AuthController>();
-
-  // Token - should be passed from auth controller
 
   // Observable variables
   final Rx<AttendanceSummary?> summary = Rx<AttendanceSummary?>(null);
@@ -16,7 +15,6 @@ class AttendanceHistoryController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
   final RxString selectedFilter = 'all'.obs;
-
 
   // Filtered records based on selected filter
   List<AttendanceRecord> get filteredRecords {
@@ -33,7 +31,6 @@ class AttendanceHistoryController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Set token - replace with actual token from auth controller
     fetchAttendanceHistory();
   }
 
@@ -41,17 +38,41 @@ class AttendanceHistoryController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      print('the token is ${authController.token.value}');
 
-      final response = await _apiService.getAttendanceHistory(token:authController.token.value);
-
-      if (response.status == 'success') {
-        summary.value = response.summary;
-        records.value = response.records;
-      } else {
-        throw Exception('Failed to fetch attendance history');
+      if (authController.token.value.isEmpty) {
+        throw Exception('Authentication token is missing');
       }
 
+      print(
+          'Fetching attendance history with token: ${authController.token.value}');
+      final response = await _apiService.getAttendanceHistory(
+          token: authController.token.value);
+
+      if (response.status == 'success') {
+        // Sanitize records to handle potentially invalid image URLs
+        final sanitizedRecords = response.records.map((record) {
+          return AttendanceRecord(
+            employeeName: record.employeeName,
+            date: record.date,
+            checkIn: record.checkIn,
+            checkOut: record.checkOut,
+            checkInLocation: record.checkInLocation,
+            checkOutLocation: record.checkOutLocation,
+            checkInCoordinates: record.checkInCoordinates,
+            checkOutCoordinates: record.checkOutCoordinates,
+            notes: record.notes,
+            checkinImage: _validateImageUrl(record.checkinImage) ?? '',
+            checkoutImage: _validateImageUrl(record.checkoutImage),
+            workedHours: record.workedHours,
+          );
+        }).toList();
+
+        summary.value = response.summary;
+        records.assignAll(sanitizedRecords);
+      } else {
+        throw Exception(
+            'Failed to fetch attendance history: ${response.status}');
+      }
     } catch (e) {
       errorMessage.value = e.toString().replaceAll('Exception: ', '');
       Get.snackbar(
@@ -67,12 +88,22 @@ class AttendanceHistoryController extends GetxController {
     }
   }
 
+  // Validate and sanitize image URLs
+  String? _validateImageUrl(String? url) {
+    if (url == null || url.isEmpty) return null;
+    // Check if the URL is valid (has http or https scheme)
+    if (Uri.tryParse(url)?.hasScheme ?? false) {
+      return url;
+    }
+    return null;
+  }
+
   void updateFilter(String filter) {
     selectedFilter.value = filter;
   }
 
   String formatTime(String? timeString) {
-    if (timeString == null) return '--:--';
+    if (timeString == null || timeString.isEmpty) return '--:--';
     try {
       DateTime dateTime = DateTime.parse(timeString);
       return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
@@ -82,7 +113,7 @@ class AttendanceHistoryController extends GetxController {
   }
 
   String formatDate(String? dateString) {
-    if (dateString == null) return 'N/A';
+    if (dateString == null || dateString.isEmpty) return 'N/A';
     try {
       DateTime date = DateTime.parse(dateString);
       return '${date.day}/${date.month}/${date.year}';
@@ -92,7 +123,7 @@ class AttendanceHistoryController extends GetxController {
   }
 
   String formatDateWithDay(String? dateString) {
-    if (dateString == null) return 'N/A';
+    if (dateString == null || dateString.isEmpty) return 'N/A';
     try {
       DateTime date = DateTime.parse(dateString);
       List<String> weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -104,7 +135,12 @@ class AttendanceHistoryController extends GetxController {
   }
 
   String calculateWorkTime(String? checkIn, String? checkOut) {
-    if (checkIn == null || checkOut == null) return '--:--';
+    if (checkIn == null ||
+        checkOut == null ||
+        checkIn.isEmpty ||
+        checkOut.isEmpty) {
+      return '--:--';
+    }
 
     try {
       DateTime checkInTime = DateTime.parse(checkIn);
@@ -121,7 +157,7 @@ class AttendanceHistoryController extends GetxController {
   }
 
   Color getStatusColor(AttendanceRecord record) {
-    if (record.checkOut != null) {
+    if (record.checkOut != null && record.checkOut!.isNotEmpty) {
       return const Color(0xFF27AE60); // Green for completed
     } else {
       return const Color(0xFFE67E22); // Orange for incomplete
@@ -129,14 +165,18 @@ class AttendanceHistoryController extends GetxController {
   }
 
   String getStatusText(AttendanceRecord record) {
-    return record.checkOut != null ? 'COMPLETED' : 'INCOMPLETE';
+    return record.checkOut != null && record.checkOut!.isNotEmpty
+        ? 'COMPLETED'
+        : 'INCOMPLETE';
   }
 
   double getAttendancePercentage() {
-    if (summary.value == null || summary.value!.totalDays == 0) return 0.0;
-    return 100;
+    if (summary.value == null ||
+        summary.value!.totalDays == null ||
+        summary.value!.totalDays == 0) {
+      return 0.0;
+    }
+    return (summary.value!.present! / summary.value!.totalDays! * 100)
+        .clamp(0.0, 100.0);
   }
-
-  // Method to set token from auth controller
-
 }

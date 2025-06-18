@@ -1,13 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:kredipal/models/salary_slip_model.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../constant/api_url.dart';
 import '../models/all_leads_model.dart';
+import '../models/all_leaves_model.dart';
 import '../models/all_task_model.dart';
+import '../models/apply_leave_model.dart';
 
 class ApiService {
-
   Future<Map<String, dynamic>> logIn(String email, String password) async {
     try {
       final response = await http.post(
@@ -22,7 +26,6 @@ class ApiService {
       );
 
       final data = json.decode(response.body);
-
 
       if (response.statusCode == 200 && data['status'] == 'success') {
         return {
@@ -45,18 +48,17 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getUserProfile(String token) async {
+  static Future<Map<String, dynamic>> getUserProfile(String token) async {
     final response = await http.get(
       Uri.parse('${ApiUrl.baseUrl}/api/user'),
       headers: {
         'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
       },
     );
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data; // This will be your user object
+      return data;
     } else {
       throw Exception('Failed to load user profile');
     }
@@ -125,8 +127,8 @@ class ApiService {
     required String newPassword,
     required String confirmPassword,
   }) async {
-    final uri =
-        Uri.parse("${ApiUrl.baseUrl}/api/change-password"); // Adjust endpoint if needed
+    final uri = Uri.parse(
+        "${ApiUrl.baseUrl}/api/change-password"); // Adjust endpoint if needed
 
     final response = await http.post(
       uri,
@@ -184,11 +186,10 @@ class ApiService {
       print('the voice error is ${response.body}');
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to create lead: ${response.statusCode} - ${response.body}');
+      throw Exception(
+          'Failed to create lead: ${response.statusCode} - ${response.body}');
     }
   }
-
-
 
   Future<AllLeadsList> fetchAllLeads({required String token}) async {
     final response = await http.get(
@@ -287,4 +288,126 @@ class ApiService {
       return false;
     }
   }
+
+  static Future<AllLeavesModel?> getAllLeave(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiUrl.baseUrl}/api/leaves'),
+        headers: {'Authorization': "Bearer $token"},
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        print('the all leaves data is ${response.body}');
+        return AllLeavesModel.fromJson(body);
+      } else {
+        print('Error: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Exception: $e');
+      return null;
+    }
+  }
+
+  static Future<ApplyLeaveResponse?> applyLeave({
+    required String token,
+    required String leaveType,
+    required int appliedTo,
+    required String startDate,
+    required String endDate,
+    required String reason,
+  }) async {
+    try {
+      final url = Uri.parse('${ApiUrl.baseUrl}/api/leaves');
+      final body = {
+        "leave_type": leaveType,
+        "applied_to": appliedTo,
+        "start_date": startDate,
+        "end_date": endDate,
+        "reason": reason,
+      };
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+
+      print("Apply Leave Response: ${response.statusCode} - ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return ApplyLeaveResponse.fromJson(data);
+      } else {
+        print("Error while applying leave: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Exception during applyLeave: $e");
+      return null;
+    }
+  }
+
+  static Future<SalarySlipModel?> getSalarySlip(String token)async{
+    try{
+
+      final response = await http.get(Uri.parse('${ApiUrl.baseUrl}/api/salary-slips'),headers: {
+        'Authorization':'Bearer $token'
+      });
+
+      if(response.statusCode == 200){
+        final body = jsonDecode(response.body);
+        print('the salary slip ${response.body}');
+        return SalarySlipModel.fromJson(body);
+      }
+
+    }catch(e){
+      print('the error in salary slip is ${e.toString()}');
+    }
+    return null;
+  }
+
+
+  static Future<void> downloadSalarySlip(String token, int slipId) async {
+    try {
+      final url = "https://crm.kredipal.com/api/salary-slips/$slipId/download";
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': token,
+        },
+      );
+
+      final contentType = response.headers['content-type'] ?? '';
+
+      if (response.statusCode == 200 && contentType.contains("application/pdf")) {
+        final bytes = response.bodyBytes;
+
+        // ✅ This directory works without permissions
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = "${directory.path}/salary_slip_$slipId.pdf";
+
+        final file = File(filePath);
+        await file.writeAsBytes(bytes);
+        print("File downloaded to $filePath");
+      }
+      else if (contentType.contains("application/json")) {
+        final Map<String, dynamic> errorData = json.decode(response.body);
+        final errorMessage = errorData['message'] ?? 'Unknown error';
+        throw Exception(errorMessage);
+      }
+      else {
+        throw Exception("Unexpected response: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Download error: $e");
+      rethrow;
+    }
+  }
+
+
 }

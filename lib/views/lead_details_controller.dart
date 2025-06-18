@@ -12,17 +12,14 @@ class LeadDetailsController extends GetxController {
   final RxString errorMessage = ''.obs;
 
   @override
-  void onInit() {
-    super.onInit();
-
-    // Get lead data from arguments
+  void onReady() {
+    super.onReady();
     final Leads? lead = Get.arguments as Leads?;
     if (lead != null) {
-      leadDetails.value = lead;
-      // Optionally fetch fresh details from API
-      // fetchLeadDetails(lead.id!);
+      fetchLeadDetails(lead.id!); // ← always fetch from API
     }
   }
+
 
   Future<void> fetchLeadDetails(int leadId) async {
     try {

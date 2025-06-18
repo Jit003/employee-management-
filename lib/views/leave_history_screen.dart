@@ -1,39 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:kredipal/constant/app_color.dart';
+import 'package:kredipal/controller/all_leave_controller.dart';
 import 'package:kredipal/widgets/custom_app_bar.dart';
 
 class LeaveHistoryScreen extends StatelessWidget {
-  const LeaveHistoryScreen({super.key});
+  LeaveHistoryScreen({super.key});
 
-  final List<Map<String, String>> leaveHistory = const [
-    {
-      'type': 'Sick Leave',
-      'from': '2025-05-01',
-      'to': '2025-05-03',
-      'reason': 'Fever and weakness',
-      'status': 'Approved'
-    },
-    {
-      'type': 'Casual Leave',
-      'from': '2025-04-20',
-      'to': '2025-04-21',
-      'reason': 'Family function',
-      'status': 'Pending'
-    },
-    {
-      'type': 'Paid Leave',
-      'from': '2025-03-10',
-      'to': '2025-03-12',
-      'reason': 'Vacation trip',
-      'status': 'Rejected'
-    },
-  ];
+  final AllLeavesController allLeavesController =
+      Get.put(AllLeavesController());
 
   Color getStatusColor(String status) {
     switch (status) {
-      case 'Approved':
+      case 'approved':
         return Colors.green;
-      case 'Rejected':
+      case 'rejected':
         return Colors.red;
       case 'Pending':
       default:
@@ -43,11 +25,11 @@ class LeaveHistoryScreen extends StatelessWidget {
 
   IconData getLeaveIcon(String type) {
     switch (type) {
-      case 'Sick Leave':
+      case 'sick':
         return Icons.local_hospital;
-      case 'Casual Leave':
+      case 'casual':
         return Icons.event;
-      case 'Paid Leave':
+      case 'paid':
         return Icons.card_giftcard;
       default:
         return Icons.help_outline;
@@ -57,68 +39,81 @@ class LeaveHistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: 'Leave History'),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: leaveHistory.length,
-        itemBuilder: (context, index) {
-          final leave = leaveHistory[index];
-          return Card(
-            elevation: 5,
-            margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+        appBar: CustomAppBar(title: 'Leave History'),
+        body: Obx(() {
+          if (allLeavesController.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (allLeavesController.leavesList.isEmpty) {
+            return Text("No leaves found");
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: allLeavesController.leavesList.length,
+            itemBuilder: (context, index) {
+              final leave = allLeavesController.leavesList[index];
+              return Card(
+                elevation: 5,
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.teal.shade100,
-                        child: Icon(getLeaveIcon(leave['type']!), color: Colors.teal),
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: Colors.teal.shade100,
+                            child: Icon(getLeaveIcon(leave.leaveType!), color: Colors.teal),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            leave.leaveType ?? '',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const Spacer(),
+                          Chip(
+                            label: Text(leave.status!),
+                            backgroundColor:
+                                getStatusColor(leave.status!).withOpacity(0.2),
+                            labelStyle: TextStyle(
+                              color: getStatusColor(leave.status!),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        ],
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          const Icon(Icons.date_range,
+                              size: 16, color: Colors.grey),
+                          const SizedBox(width: 6),
+                          Text(
+                            "${DateFormat('dd-mm-yyyy').format(DateTime.parse(leave.startDate!))} to "
+                                "${DateFormat('dd-mm-yyyy').format(DateTime.parse(leave.endDate!))}",
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
                       Text(
-                        leave['type'] ?? '',
+                        leave.reason ?? '',
                         style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Spacer(),
-                      Chip(
-                        label: Text(leave['status']!),
-                        backgroundColor: getStatusColor(leave['status']!).withOpacity(0.2),
-                        labelStyle: TextStyle(
-                          color: getStatusColor(leave['status']!),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Icon(Icons.date_range, size: 16, color: Colors.grey),
-                      const SizedBox(width: 6),
-                      Text(
-                        "${leave['from']} to ${leave['to']}",
-                        style: const TextStyle(color: Colors.grey),
+                            fontSize: 14, color: Colors.black87),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    leave['reason'] ?? '',
-                    style: const TextStyle(fontSize: 14, color: Colors.black87),
-                  ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           );
-        },
-      ),
-    );
+        }));
   }
 }

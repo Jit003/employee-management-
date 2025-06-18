@@ -264,7 +264,7 @@ IconData _getIconForText(String text) {
   if (lowerText.contains('dashboard') || lowerText.contains('home')) {
     return Icons.dashboard;
   } else if (lowerText.contains('lead') || lowerText.contains('customer')) {
-    return Icons.people;
+    return Icons.leaderboard;
   } else if (lowerText.contains('attendance') || lowerText.contains('check')) {
     return Icons.access_time;
   } else if (lowerText.contains('profile') || lowerText.contains('account')) {

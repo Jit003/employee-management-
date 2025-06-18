@@ -6,58 +6,96 @@ import 'package:path_provider/path_provider.dart';
 
 class VoiceRecorderController extends GetxController {
   final FlutterSoundRecorder recorder = FlutterSoundRecorder();
+  final FlutterSoundPlayer player = FlutterSoundPlayer();
+
   final RxBool isRecording = false.obs;
+  final RxBool isPlaying = false.obs;
+
   String? recordedFilePath;
   bool _isRecorderInitialized = false;
+  bool _isPlayerInitialized = false;
 
   @override
   void onInit() {
     super.onInit();
-    initRecorder();
   }
 
-  Future<void> initRecorder() async {
-    var micStatus = await Permission.microphone.request();
-    if (micStatus.isGranted) {
-      await recorder.openRecorder();
-      _isRecorderInitialized = true;
-    } else {
-      Get.snackbar("Permission Denied", "Microphone access is required.");
+  Future<void> init() async {
+    await _requestPermissions();
+    await _initRecorder();
+    await _initPlayer();
+  }
+
+  Future<void> _requestPermissions() async {
+    var mic = await Permission.microphone.request();
+    var storage = await Permission.storage.request();
+    var media = await Permission.mediaLibrary.request();
+
+    if (!mic.isGranted || !storage.isGranted) {
+      Get.snackbar("Permission Denied", "Microphone and storage permission required");
     }
+  }
+
+  Future<void> _initRecorder() async {
+    await recorder.openRecorder();
+    _isRecorderInitialized = true;
+  }
+
+  Future<void> _initPlayer() async {
+    await player.openPlayer();
+    _isPlayerInitialized = true;
   }
 
   Future<void> startRecording() async {
     if (!_isRecorderInitialized) {
-      await initRecorder();
+      await _initRecorder();
     }
 
-    if (!recorder.isRecording) {
-      final dir = await getTemporaryDirectory();
-      recordedFilePath = "${dir.path}/recorded_voice.wav"; // ✅ correct extension
+    final dir = await getTemporaryDirectory();
+    recordedFilePath = "${dir.path}/recorded_voice.aac";
 
-      await recorder.startRecorder(
-        toFile: recordedFilePath,
-        codec: Codec.pcm16WAV, // ✅ matches extension
-      );
-      isRecording.value = true;
-    }
+    await recorder.startRecorder(
+      toFile: recordedFilePath,
+      codec: Codec.aacADTS,
+    );
+    isRecording.value = true;
   }
 
   Future<void> stopRecording() async {
-    if (recorder.isRecording) {
-      await recorder.stopRecorder();
-      isRecording.value = false;
-      final file = File(recordedFilePath!);
-      print("File exists: ${await file.exists()}");
-      print("File size: ${await file.length()} bytes");
+    await recorder.stopRecorder();
+    isRecording.value = false;
+    print("Recording saved: $recordedFilePath");
+  }
 
-      print("Recording  saved to: $recordedFilePath");
+  Future<void> playRecording() async {
+    if (recordedFilePath == null || !File(recordedFilePath!).existsSync()) {
+      Get.snackbar("Error", "No recording found");
+      return;
     }
+
+    if (!_isPlayerInitialized) {
+      await _initPlayer();
+    }
+
+    await player.startPlayer(
+      fromURI: recordedFilePath!,
+      codec: Codec.aacADTS,
+      whenFinished: () {
+        isPlaying.value = false;
+      },
+    );
+    isPlaying.value = true;
+  }
+
+  Future<void> stopPlaying() async {
+    await player.stopPlayer();
+    isPlaying.value = false;
   }
 
   @override
   void onClose() {
     recorder.closeRecorder();
+    player.closePlayer();
     super.onClose();
   }
 }

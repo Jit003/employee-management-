@@ -6,8 +6,8 @@ class AllLeadsList {
   AllLeadsList({this.status, this.message, this.data});
 
   AllLeadsList.fromJson(Map<String, dynamic> json) {
-    status = json['status'];
-    message = json['message'];
+    status = json['status']?.toString();
+    message = json['message']?.toString();
     data = json['data'] != null ? new Data.fromJson(json['data']) : null;
   }
 
@@ -25,8 +25,9 @@ class AllLeadsList {
 class Data {
   List<Leads>? leads;
   Aggregates? aggregates;
+  FiltersApplied? filtersApplied;
 
-  Data({this.leads, this.aggregates});
+  Data({this.leads, this.aggregates, this.filtersApplied});
 
   Data.fromJson(Map<String, dynamic> json) {
     if (json['leads'] != null) {
@@ -38,6 +39,9 @@ class Data {
     aggregates = json['aggregates'] != null
         ? new Aggregates.fromJson(json['aggregates'])
         : null;
+    filtersApplied = json['filters_applied'] != null
+        ? new FiltersApplied.fromJson(json['filters_applied'])
+        : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -47,6 +51,9 @@ class Data {
     }
     if (this.aggregates != null) {
       data['aggregates'] = this.aggregates!.toJson();
+    }
+    if (this.filtersApplied != null) {
+      data['filters_applied'] = this.filtersApplied!.toJson();
     }
     return data;
   }
@@ -72,6 +79,7 @@ class Leads {
   String? voiceRecording;
   String? createdAt;
   String? updatedAt;
+  bool? isPersonalLead;
   Employee? employee;
   TeamLead? teamLead;
 
@@ -95,6 +103,7 @@ class Leads {
         this.voiceRecording,
         this.createdAt,
         this.updatedAt,
+        this.isPersonalLead,
         this.employee,
         this.teamLead});
 
@@ -103,13 +112,13 @@ class Leads {
     employeeId = json['employee_id'];
     teamLeadId = json['team_lead_id'];
     name = json['name'];
-    phone = json['phone']?.toString();          // ✅ Convert to String
+    phone = json['phone'].toString();
     email = json['email'];
     dob = json['dob'];
     location = json['location'];
     companyName = json['company_name'];
-    leadAmount = json['lead_amount']?.toString();  // ✅ Convert to String
-    salary = json['salary']?.toString();           // ✅ Convert to String
+    leadAmount = json['lead_amount'].toString();
+    salary = json['salary'].toString();
     successPercentage = json['success_percentage'];
     expectedMonth = json['expected_month'];
     remarks = json['remarks'];
@@ -118,8 +127,13 @@ class Leads {
     voiceRecording = json['voice_recording'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
-    employee = json['employee'] != null ? Employee.fromJson(json['employee']) : null;
-    teamLead = json['team_lead'] != null ? TeamLead.fromJson(json['team_lead']) : null;
+    isPersonalLead = json['is_personal_lead'];
+    employee = json['employee'] != null
+        ? new Employee.fromJson(json['employee'])
+        : null;
+    teamLead = json['team_lead'] != null
+        ? new TeamLead.fromJson(json['team_lead'])
+        : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -143,6 +157,7 @@ class Leads {
     data['voice_recording'] = this.voiceRecording;
     data['created_at'] = this.createdAt;
     data['updated_at'] = this.updatedAt;
+    data['is_personal_lead'] = this.isPersonalLead;
     if (this.employee != null) {
       data['employee'] = this.employee!.toJson();
     }
@@ -158,15 +173,15 @@ class Employee {
   String? name;
   String? email;
   String? password;
-  Null? phone;
+  String? phone;
   String? designation;
-  Null? department;
-  Null? profilePhoto;
-  Null? address;
-  Null? panCard;
-  Null? aadharCard;
-  Null? signature;
-  Null? createdBy;
+  String? department;
+  String? profilePhoto;
+  String? address;
+  String? panCard;
+  String? aadharCard;
+  String? signature;
+  String? createdBy;
   int? teamLeadId;
   String? createdAt;
   String? updatedAt;
@@ -237,13 +252,13 @@ class TeamLead {
   String? password;
   String? phone;
   String? designation;
-  Null? department;
+  String? department;
   String? profilePhoto;
   String? address;
-  Null? panCard;
-  Null? aadharCard;
-  Null? signature;
-  Null? createdBy;
+  String? panCard;
+  String? aadharCard;
+  String? signature;
+  String? createdBy;
   int? teamLeadId;
   String? createdAt;
   String? updatedAt;
@@ -312,12 +327,14 @@ class Aggregates {
   TotalLeads? approvedLeads;
   DisbursedLeads? disbursedLeads;
   TotalLeads? pendingLeads;
+  TotalLeads? rejectedLeads;
 
   Aggregates(
       {this.totalLeads,
         this.approvedLeads,
         this.disbursedLeads,
-        this.pendingLeads});
+        this.pendingLeads,
+        this.rejectedLeads});
 
   Aggregates.fromJson(Map<String, dynamic> json) {
     totalLeads = json['total_leads'] != null
@@ -331,6 +348,9 @@ class Aggregates {
         : null;
     pendingLeads = json['pending_leads'] != null
         ? new TotalLeads.fromJson(json['pending_leads'])
+        : null;
+    rejectedLeads = json['rejected_leads'] != null
+        ? new TotalLeads.fromJson(json['rejected_leads'])
         : null;
   }
 
@@ -347,6 +367,9 @@ class Aggregates {
     }
     if (this.pendingLeads != null) {
       data['pending_leads'] = this.pendingLeads!.toJson();
+    }
+    if (this.rejectedLeads != null) {
+      data['rejected_leads'] = this.rejectedLeads!.toJson();
     }
     return data;
   }
@@ -386,6 +409,39 @@ class DisbursedLeads {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['count'] = this.count;
     data['total_amount'] = this.totalAmount;
+    return data;
+  }
+}
+
+class FiltersApplied {
+  String? leadType;
+  String? status;
+  String? dateFilter;
+  String? startDate;
+  String? endDate;
+
+  FiltersApplied(
+      {this.leadType,
+        this.status,
+        this.dateFilter,
+        this.startDate,
+        this.endDate});
+
+  FiltersApplied.fromJson(Map<String, dynamic> json) {
+    leadType = json['lead_type'];
+    status = json['status'];
+    dateFilter = json['date_filter'].toString();
+    startDate = json['start_date'].toString();
+    endDate = json['end_date'].toString();
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['lead_type'] = this.leadType;
+    data['status'] = this.status;
+    data['date_filter'] = this.dateFilter;
+    data['start_date'] = this.startDate;
+    data['end_date'] = this.endDate;
     return data;
   }
 }

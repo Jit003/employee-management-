@@ -27,26 +27,51 @@ class LeadsApiService extends getx.GetxService {
     ));
   }
 
-  Future<AllLeadsList> getAllLeads() async {
+  Future<AllLeadsList> getAllLeads({
+    String? leadType,
+    String? status,
+    String? dateFilter,
+    String? startDate, // Add this
+    String? endDate,   // Add this
+  }) async {
     try {
-      final response = await _dio.get('/api/leads');
+      Map<String, dynamic> queryParams = {};
+
+      if (leadType != null && leadType != 'All') {
+        queryParams['lead_type'] = leadType;
+      }
+      if (status != null && status.toLowerCase() != 'all') {
+        queryParams['status'] = status;
+      }
+
+      if (startDate != null && startDate.isNotEmpty) {
+        queryParams['start_date'] = startDate; // Format: 'YYYY-MM-DD'
+      }
+      if (endDate != null && endDate.isNotEmpty) {
+        queryParams['end_date'] = endDate;
+      }
+
+      // Add date_filter only if date range is selected
+      if ((startDate != null && startDate.isNotEmpty) &&
+          (endDate != null && endDate.isNotEmpty)) {
+        queryParams['date_filter'] = 'date_range';
+      }
+
+      final response = await _dio.get('/api/leads', queryParameters: queryParams);
 
       if (response.statusCode == 200) {
-        print('the all leads list is ${response.data}');
         return AllLeadsList.fromJson(response.data);
       } else {
         throw Exception('Failed to fetch leads: ${response.statusMessage}');
       }
-    } on DioException catch (e) {
-      throw Exception('Network error: ${e.message}');
     } catch (e) {
-      throw Exception('Unexpected error: $e');
+      throw Exception('Error fetching leads: $e');
     }
   }
 
   Future<Leads> getLeadDetails(int leadId) async {
     try {
-      final response = await _dio.get('/leads/$leadId');
+      final response = await _dio.get('/api/leads/$leadId');
 
       if (response.statusCode == 200) {
         return Leads.fromJson(response.data['data']);
@@ -59,4 +84,37 @@ class LeadsApiService extends getx.GetxService {
       throw Exception('Unexpected error: $e');
     }
   }
+
+
+
+  // GET lead details for editing
+  Future<Leads> getLeadForEdit(int leadId) async {
+    try {
+      final response = await _dio.get('/api/leads/$leadId/edit');
+      if (response.statusCode == 200 &&
+          response.data['status'] == 'success') {
+        return Leads.fromJson(response.data['data']['lead']);
+      } else {
+        throw Exception('Failed to fetch lead: ${response.data['message']}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching lead: $e');
+    }
+  }
+
+  // PUT update lead
+  Future<void> updateLead(int leadId, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/api/leads/$leadId', data: data);
+      if (response.statusCode != 200 || response.data['status'] != 'success') {
+        throw Exception('Failed to update lead: ${response.data['message']}');
+      }
+    } catch (e) {
+      throw Exception('Error updating lead: $e');
+    }
+  }
+
+
+
+
 }

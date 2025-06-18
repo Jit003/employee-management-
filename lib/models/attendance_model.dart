@@ -85,7 +85,8 @@ class AttendanceResponse {
     return AttendanceResponse(
       status: json['status'],
       message: json['message'],
-      data: json['data'] != null ? AttendanceRecord.fromJson(json['data']) : null,
+      data:
+      json['data'] != null ? AttendanceRecord.fromJson(json['data']) : null,
     );
   }
 }

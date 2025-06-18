@@ -6,6 +6,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_services.dart';
 
 class AuthController extends GetxController {
+
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadToken(); // Load saved token during initialization
+  }
+
+
   final ApiService apiService = ApiService();
   var isLoading = false.obs;
   var userData = {}.obs;
@@ -29,13 +38,16 @@ class AuthController extends GetxController {
 
     if (result['success']) {
       token.value = result['token'];
+      userData.value = result['user']; // ✅ Store the user object here
+
       // ✅ Save token using SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', result['token']);
 
-      Get.snackbar(backgroundColor: Colors.green, 'Success', result['message']);
+      print("team_lead_id: ${userData['team_lead_id']}"); // ✅ Debug
+
+      Get.snackbar(backgroundColor: Colors.green, 'Success ', result['message']);
       Get.offNamed(AppRoutes.home);
-      // Navigate to home/dashboard
     } else {
       Get.snackbar('Error', result['message'],
           backgroundColor: Colors.redAccent, colorText: Colors.white);
@@ -57,6 +69,6 @@ class AuthController extends GetxController {
     Get.snackbar(
         backgroundColor: Colors.white,
         'Logged Out',
-        'You have been successfully  logged out');
+        'You have been successfully logged out');
   }
 }

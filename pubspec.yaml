@@ -61,6 +61,9 @@ dependencies:
   audioplayers: ^6.4.0
   geolocator: 9.0.2
   geocoding: ^4.0.0
+  shimmer: ^3.0.0
+  flutter_animate: ^4.5.2
+  google_fonts: ^6.2.1
 
 
 dev_dependencies:

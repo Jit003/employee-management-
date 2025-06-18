@@ -1,8 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kredipal/constant/app_color.dart';
 import 'package:kredipal/routes/app_routes.dart';
-import '../constant/app_color.dart';
 import '../controller/bottom_nav_controller.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
@@ -11,171 +10,170 @@ class CustomBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final BottomNavController controller = Get.find();
-    final double screenWidth = MediaQuery.of(context).size.width;
 
-    final List<IconData> icons = [
-      Icons.home,
-      Icons.leaderboard,
-      Icons.present_to_all,
-      Icons.person,
-    ];
-
-    final List<String> labels = [
-      'Home',
-      'Leads',
-      'Attendance',
-      'Profile',
+    // Define navigation items with icons and labels
+    final List<Map<String, dynamic>> navItems = [
+      {'icon': Icons.home_rounded, 'label': 'Dashboard'},
+      {'icon': Icons.list_alt_rounded, 'label': 'All Leads'},
+      {'icon': Icons.event_available_rounded, 'label': 'Attendance'},
+      {'icon': Icons.person_rounded, 'label': 'Account'},
     ];
 
     return Stack(
       clipBehavior: Clip.none,
+      alignment: Alignment.topCenter,
       children: [
-        Container(
-          height: 75,
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: AppColor.btmNavBarColor,
-            borderRadius: const BorderRadius.only(
-              topRight: Radius.circular(30),
-              topLeft: Radius.circular(30),
-            ),
-          ),
-          child: Obx(() {
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(4, (index) {
-                final isSelected = controller.selectedIndex.value == index;
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () => controller.changePage(index),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: screenWidth * 0.015,
-                      ),
+        // Custom shaped bottom navigation bar
+        CustomPaint(
+          size: Size(MediaQuery.of(context).size.width, 90),
+          painter: BottomNavBarPainter(),
+          child: SizedBox(
+            height: 70,
+            width: double.infinity,
+            child: Obx(() {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(navItems.length, (index) {
+                  final isSelected = controller.selectedIndex.value == index;
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => controller.changePage(index),
+                      behavior: HitTestBehavior.translucent,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 400),
-                            curve: Curves.elasticOut,
-                            width: screenWidth * 0.12,
-                            height: screenWidth * 0.10,
-                            decoration: BoxDecoration(
-                              gradient: isSelected
-                                  ? LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  AppColor.btnColor,
-                                  AppColor.btnColor.withOpacity(0.8),
-                                ],
-                              )
-                                  : null,
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            child: AnimatedScale(
-                              scale: isSelected ? 1.1 : 1.0,
-                              duration: const Duration(milliseconds: 200),
-                              child: Icon(
-                                icons[index],
-                                size: isSelected
-                                    ? screenWidth * 0.065
-                                    : screenWidth * 0.055,
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.white.withOpacity(0.7),
-                              ),
-                            ),
+                          const SizedBox(height: 8),
+                          Icon(
+                            navItems[index]['icon'],
+                            size: 20,
+                            color: isSelected ? Colors.orange : Colors.white70,
                           ),
                           const SizedBox(height: 4),
-                          AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 200),
+                          Text(
+                            navItems[index]['label'],
                             style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : Colors.white.withOpacity(0.7),
-                              fontSize: screenWidth * 0.028,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              letterSpacing: 0.5,
+                              fontSize: 12,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                              color: isSelected ? Colors.orange : Colors.white54,
                             ),
-                            child: Text(labels[index]),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                );
-              }),
-            );
-          }),
+                  );
+                }),
+              );
+            }),
+          ),
         ),
 
         // Center FAB Button
         Positioned(
-          top: -28,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: GestureDetector(
-              onTap: () {
-                Get.toNamed(AppRoutes.addLead);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: screenWidth * 0.15,
-                height: screenWidth * 0.15,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColor.btnColor,
-                      AppColor.btnColor.withOpacity(0.8),
-                    ],
+          top: -35, // Move FAB up to sit within the curve
+          child: GestureDetector(
+            onTap: () {
+              Get.toNamed(AppRoutes.addLead);
+            },
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.orange,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColor.btnColor.withOpacity(0.4),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 2,
-                  ),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        Colors.white.withOpacity(0.2),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 1.0],
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.add_rounded,
-                    color: Colors.white,
-                    size: screenWidth * 0.07,
-                  ),
-                ),
+                ],
+              ),
+              child: const Icon(
+                Icons.add,
+                color: Colors.white,
+                size: 32,
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+// Custom painter for the curved navigation bar
+class BottomNavBarPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint paint = Paint()
+      ..color = AppColor.appBarColor
+      ..style = PaintingStyle.fill;
+
+    Path path = Path();
+
+    // Start from the left bottom corner
+    path.moveTo(0, 0);
+
+    // Draw line to the start of the curve
+    path.lineTo(size.width * 0.35, 0);
+
+    // Draw a smoother, deeper curve for the FAB
+    path.quadraticBezierTo(
+      size.width * 0.40, 0,
+      size.width * 0.42, 40,
+    );
+    path.quadraticBezierTo(
+      size.width * 0.0, 70,
+      size.width * 0.0, 40,
+    );
+    path.quadraticBezierTo(
+      size.width * 0.0, 0,
+      size.width * 0.0, 0,
+    );
+
+    // Draw line to the right bottom corner
+    path.lineTo(size.width, 0);
+
+    // Draw line to the right top corner
+    path.lineTo(size.width, size.height);
+
+    // Draw line to the left top corner
+    path.lineTo(0, size.height);
+
+    // Close the path
+    path.close();
+
+    // Draw shadow
+    Paint shadowPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    canvas.drawPath(path, shadowPaint);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+// Scaffold implementation example
+class BottomNavScaffold extends StatelessWidget {
+  final Widget body;
+
+  const BottomNavScaffold({
+    super.key,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      body: body,
+      bottomNavigationBar: const CustomBottomNavBar(),
+      extendBody: true, // Allow content to extend behind the nav bar
     );
   }
 }

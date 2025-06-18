@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:kredipal/constant/app_images.dart';
+import 'package:kredipal/services/api_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
@@ -39,8 +40,9 @@ class SplashController extends GetxController {
       authController.token.value = token;
 
       try {
-        final profile = await authController.apiService.getUserProfile(token);
+        final profile = await ApiService.getUserProfile(token);
         authController.userData.value = profile;
+
         Get.offAllNamed(AppRoutes.home); // ✅ Go to home
       } catch (e) {
         Get.snackbar('Error', 'Failed to fetch user profile');

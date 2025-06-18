@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:get/get.dart';
+import 'package:kredipal/controller/edit_lead_controller.dart';
 import 'package:kredipal/routes/app_routes.dart';
 import '../models/all_leads_model.dart';
 import '../services/lead_api_service.dart';
@@ -7,57 +8,73 @@ import '../services/lead_api_service.dart';
 class AllLeadsController extends GetxController {
   final LeadsApiService _apiService = Get.put(LeadsApiService());
 
+  final Rxn<DateTime> startDate = Rxn<DateTime>();
+  final Rxn<DateTime> endDate = Rxn<DateTime>();
+
+
   final RxList<Leads> allLeads = <Leads>[].obs;
+  RxList<Leads> filteredLeads = <Leads>[].obs;
   final Rx<Aggregates?> aggregates = Rx<Aggregates?>(null);
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
   final RxString searchQuery = ''.obs;
   final RxString selectedStatus = 'all'.obs;
+  final RxString selectedLeadType = 'All'.obs;
+  final RxString dateFilter = 'this_month'.obs;
 
-  // Filtered leads based on search and status
-  List<Leads> get filteredLeads {
-    List<Leads> leads = allLeads;
 
-    // Filter by status
-    if (selectedStatus.value != 'all') {
-      leads = leads.where((lead) =>
-      lead.status?.toLowerCase() == selectedStatus.value.toLowerCase()
-      ).toList();
-    }
 
-    // Filter by search query
-    if (searchQuery.value.isNotEmpty) {
-      leads = leads.where((lead) =>
-      lead.name?.toLowerCase().contains(searchQuery.value.toLowerCase()) == true ||
-          lead.phone?.contains(searchQuery.value) == true ||
-          lead.email?.toLowerCase().contains(searchQuery.value.toLowerCase()) == true ||
-          lead.companyName?.toLowerCase().contains(searchQuery.value.toLowerCase()) == true
-      ).toList();
-    }
-
-    return leads;
-  }
 
   @override
   void onInit() {
     super.onInit();
+    selectedStatus.value = 'all';
+    selectedLeadType.value = 'All';
     fetchAllLeads();
   }
 
-  Future<void> fetchAllLeads() async {
+  // Change fetchAllLeads to accept filters
+  Future<void> fetchAllLeads({
+    String? leadType,
+    String? status,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final response = await _apiService.getAllLeads();
+      // Decide dateFilter value
+      String? filterType;
+      String? start;
+      String? end;
+
+      if (dateFilter.value == 'date_range' &&
+          startDate != null &&
+          endDate != null) {
+        filterType = 'date_range';
+        start = formatDate(startDate);
+        end = formatDate(endDate);
+      } else {
+        filterType = dateFilter.value;
+      }
+
+      final response = await _apiService.getAllLeads(
+        leadType: leadType,
+        status: status,
+        dateFilter: filterType,
+        startDate: start,
+        endDate: end,
+      );
 
       if (response.status == 'success' && response.data != null) {
         allLeads.value = response.data!.leads ?? [];
         aggregates.value = response.data!.aggregates;
+        filteredLeads.value = allLeads;
+        Get.delete<LeadEditController>();
       } else {
         throw Exception(response.message ?? 'Failed to fetch leads');
       }
-
     } catch (e) {
       errorMessage.value = e.toString();
       Get.snackbar(
@@ -70,13 +87,27 @@ class AllLeadsController extends GetxController {
     }
   }
 
-  void updateSearchQuery(String query) {
-    searchQuery.value = query;
+// Update filter setters to fetch filtered data from API
+  void updateStatusFilter(String value) {
+    selectedStatus.value = value;
+    fetchAllLeads(
+      leadType: selectedLeadType.value == 'All' ? null : selectedLeadType.value,
+      status: value == 'all' ? null : value,
+      startDate: startDate.value,
+      endDate: endDate.value,
+    );
   }
 
-  void updateStatusFilter(String status) {
-    selectedStatus.value = status;
+  void updateStatusLeadType(String value) {
+    selectedLeadType.value = value;
+    fetchAllLeads(
+      leadType: value == 'All' ? null : value,
+      status: selectedStatus.value == 'all' ? null : selectedStatus.value,
+      startDate: startDate.value,
+      endDate: endDate.value,
+    );
   }
+
 
   Color getStatusColor(String? status) {
     switch (status?.toLowerCase()) {
@@ -84,7 +115,7 @@ class AllLeadsController extends GetxController {
         return const Color(0xFF27AE60);
       case 'pending':
         return const Color(0xFFE67E22);
-      case 'disbursed':
+      case 'completed':
         return const Color(0xFF9B59B6);
       case 'rejected':
         return const Color(0xFFE74C3C);
@@ -126,4 +157,10 @@ class AllLeadsController extends GetxController {
   void navigateToLeadDetails(Leads lead) {
     Get.toNamed(AppRoutes.leadDetails, arguments: lead);
   }
+
+  String formatDate(DateTime date) {
+    return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+
 }

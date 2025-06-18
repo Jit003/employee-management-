@@ -13,19 +13,30 @@ class AllLeadsScreen extends StatelessWidget {
     final AllLeadsController controller = Get.put(AllLeadsController());
 
     return Scaffold(
+      appBar: const CustomAppBar(title: 'All Lead',showBackButton: false,),
       backgroundColor: const Color(0xFFF5F7FA),
       body: Column(
         children: [
           // Custom Header with Aggregates
 
-          customHeader('All Leads List'),
           // Search and Filter Section
           Container(
             padding: const EdgeInsets.all(16),
             color: Colors.white,
             child: Column(
               children: [
-                // Search Bar
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Obx(() => Row(
+                    children: [
+                      _buildFilterLeadType('All', 'All', controller),
+                      _buildFilterLeadType('HL', 'home_loan', controller),
+                      _buildFilterLeadType('PL', 'personal_loan', controller),
+                      _buildFilterLeadType('BL', 'business_loan', controller),
+                      _buildFilterLeadType('CCL', 'creditcard_loan', controller),
+                    ],
+                  )),
+                ),
 
                 const SizedBox(height: 12),
 
@@ -35,12 +46,25 @@ class AllLeadsScreen extends StatelessWidget {
                   child: Obx(() => Row(
                     children: [
                       _buildFilterChip('Total Leads', 'all', controller),
-                      _buildFilterChip('Disbursed Leads', 'disbursed', controller),
+                      _buildFilterChip('Disbursed Leads', 'completed', controller),
                       _buildFilterChip('Approved Leads', 'approved', controller),
                       _buildFilterChip('Login Leads', 'pending', controller),
+                      _buildFilterChip('Rejected Leads', 'rejected', controller),
+
                     ],
                   )),
                 ),
+
+                Row(
+                  children: [
+                    _buildDateFilterDropdown(controller),
+                    const SizedBox(height: 10),
+                    Expanded(child: _buildDateRangePicker(controller)),
+                    const SizedBox(height: 10),
+                  ],
+                ),
+
+
               ],
             ),
           ),
@@ -62,7 +86,7 @@ class AllLeadsScreen extends StatelessWidget {
 
               final filteredLeads = controller.filteredLeads;
 
-              if (filteredLeads.isEmpty) {
+              if (controller.allLeads.isEmpty) {
                 return _buildEmptyWidget();
               }
 
@@ -74,7 +98,7 @@ class AllLeadsScreen extends StatelessWidget {
 
                   itemCount: filteredLeads.length,
                   itemBuilder: (context, index) {
-                    final lead = filteredLeads[index];
+                    final lead = filteredLeads[filteredLeads.length -1 -index];
                     return _buildLeadCard(lead, controller);
                   },
                 ),
@@ -117,10 +141,24 @@ class AllLeadsScreen extends StatelessWidget {
           break;
         case 'rejected':
           count = controller.filteredLeads.where(
-                  (lead) => lead.status?.toLowerCase() == 'rejected'
+                (lead) => lead.status?.toLowerCase() == 'rejected',
           ).length;
-          amount = '₹0';
+
+          double totalRejectedAmount = controller.filteredLeads
+              .where((lead) => lead.status?.toLowerCase() == 'rejected')
+              .fold(0.0, (sum, lead) {
+            double amount = 0;
+            if (lead.leadAmount is String) {
+              amount = double.tryParse(lead.leadAmount ?? '0') ?? 0;
+            } else if (lead.leadAmount is int) {
+              amount = (lead.leadAmount as int).toDouble();
+            }
+            return sum + amount;
+          });
+
+          amount = controller.formatCurrency(totalRejectedAmount);
           break;
+
       }
     }
 
@@ -161,6 +199,140 @@ class AllLeadsScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildDateFilterDropdown(AllLeadsController controller) {
+    return Obx(() => DropdownButton<String>(
+      value: controller.dateFilter.value,
+      items: const [
+        DropdownMenuItem(value: 'this_month', child: Text('This Month')),
+        DropdownMenuItem(value: 'this_year', child: Text('This Year')),
+        DropdownMenuItem(value: 'date_range', child: Text('Date Range')),
+      ],
+      onChanged: (val) {
+        if (val != null) {
+          controller.dateFilter.value = val;
+          controller.fetchAllLeads(
+            leadType: controller.selectedLeadType.value == 'All' ? null : controller.selectedLeadType.value,
+            status: controller.selectedStatus.value == 'all' ? null : controller.selectedStatus.value,
+            startDate: controller.startDate.value,
+            endDate: controller.endDate.value,
+          );
+        }
+      },
+    ));
+  }
+
+
+
+  Widget _buildFilterLeadType(String label, String value, AllLeadsController controller) {
+    final isSelected = controller.selectedLeadType.value == value;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Column(
+        children: [
+          FilterChip(
+            label: Text(label),
+            selected: isSelected,
+            onSelected: (selected) {
+              controller.updateStatusLeadType(value);
+            },
+            selectedColor: Colors.orange.withOpacity(0.7),
+            labelStyle: TextStyle(
+              color: isSelected ? const Color(0xFF2C3E50) : Colors.grey[600],
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateRangePicker(AllLeadsController controller) {
+    return Obx(() {
+      if (controller.dateFilter.value != 'date_range') return const SizedBox.shrink();
+
+      return Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () async {
+                DateTime? picked = await showDatePicker(
+                  context: Get.context!,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                if (picked != null) {
+                  controller.startDate.value = picked;
+                  controller.fetchAllLeads(
+                    leadType: controller.selectedLeadType.value == 'All' ? null : controller.selectedLeadType.value,
+                    status: controller.selectedStatus.value == 'all' ? null : controller.selectedStatus.value,
+                    startDate: controller.startDate.value,
+                    endDate: controller.endDate.value,
+                  );
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                margin: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Obx(() => Text(
+                  controller.startDate.value != null
+                      ? controller.formatDate(controller.startDate.value!)
+                      : 'Start Date',
+                )),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () async {
+                DateTime? picked = await showDatePicker(
+                  context: Get.context!,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                if (picked != null) {
+                  controller.endDate.value = picked;
+                  controller.fetchAllLeads(
+                    leadType: controller.selectedLeadType.value == 'All' ? null : controller.selectedLeadType.value,
+                    status: controller.selectedStatus.value == 'all' ? null : controller.selectedStatus.value,
+                    startDate: controller.startDate.value,
+                    endDate: controller.endDate.value,
+                  );
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                margin: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Obx(() => Text(
+                  controller.endDate.value != null
+                      ? controller.formatDate(controller.endDate.value!)
+                      : 'End Date',
+                )),
+              ),
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
+
+
+
+
+
   Widget _buildLeadCard(Leads lead, AllLeadsController controller) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -195,7 +367,7 @@ class AllLeadsScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            lead.name ?? 'Unknown',
+                            lead.name ?? 'Unknown ',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -270,23 +442,14 @@ class AllLeadsScreen extends StatelessWidget {
                         color: Colors.grey[600],
                       ),
                     ),
-                    Row(
-                      children: [
-                        Text(
-                          'Tap to view details',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          size: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ],
+                    Text(
+                      '${(lead.leadType ?? '').replaceAll('_', ' ').toUpperCase()}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
                     ),
+                    const SizedBox(width: 4),
                   ],
                 ),
 

@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:kredipal/controller/login-controller.dart';
 import 'package:kredipal/services/attendance_api_service.dart';
 import '../models/attendance_model.dart';
@@ -15,44 +18,121 @@ enum AttendanceState {
   processing,
   checkedIn,
   checkedOut,
-  error
+  error,
 }
 
 class AttendanceController extends GetxController {
   final ApiService _apiService = Get.put(ApiService());
   final AuthController authController = Get.find<AuthController>();
 
-  // Auth token - you should get this from your auth controller
-
-  // Observable variables
   final Rx<AttendanceState> currentState = AttendanceState.initial.obs;
   final RxString errorMessage = ''.obs;
-  final RxInt countdown = 3.obs; // Reduced countdown for better UX
+  final RxInt countdown = 3.obs;
   final RxString currentLocation = ''.obs;
   final RxString currentCoordinates = ''.obs;
   final Rx<AttendanceRecord?> todayAttendance = Rx<AttendanceRecord?>(null);
+
   final RxBool isLoading = false.obs;
   final RxBool isCheckingIn = false.obs;
   final RxBool isCheckingOut = false.obs;
   final RxBool isLocationLoading = false.obs;
-
-  // Camera related
-  CameraController? cameraController;
   final RxBool isCameraInitialized = false.obs;
+
+  CameraController? cameraController;
   Timer? countdownTimer;
 
   @override
   void onInit() {
     super.onInit();
-    // Set token - replace with actual token from auth
-    // Auto-fetch location on init
+    _loadAttendanceStatus();
   }
 
   @override
   void onClose() {
-    cameraController?.dispose();
     countdownTimer?.cancel();
+    cameraController?.dispose();
     super.onClose();
+  }
+
+  // Load saved attendance info from SharedPreferences on app start
+  Future<void> _loadAttendanceStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastDate = prefs.getString('attendanceDate') ?? '';
+    final today = DateTime.now().toIso8601String().split('T').first;
+
+    if (lastDate != today) {
+      // New day => clear saved data
+      await _resetAttendanceInPrefs();
+      todayAttendance.value = null;
+      currentState.value = AttendanceState.initial;
+    } else {
+      // Same day => load saved check-in/out flags
+      final hasCheckedIn = prefs.getBool('hasCheckedIn') ?? false;
+      final hasCheckedOut = prefs.getBool('hasCheckedOut') ?? false;
+
+      if (hasCheckedOut) {
+        currentState.value = AttendanceState.checkedOut;
+        // We can optionally restore attendanceRecord here if stored fully
+        // For now, just mark as complete
+        todayAttendance.value = AttendanceRecord(
+          id: prefs.getInt('attendanceId'),
+          checkIn: prefs.getString('checkInTime'),
+          checkOut: prefs.getString('checkOutTime'),
+          checkInLocation: prefs.getString('checkInLocation'),
+          checkOutLocation: prefs.getString('checkOutLocation'),
+        );
+      } else if (hasCheckedIn) {
+        currentState.value = AttendanceState.checkedIn;
+        todayAttendance.value = AttendanceRecord(
+          id: prefs.getInt('attendanceId'),
+          checkIn: prefs.getString('checkInTime'),
+          checkOut: null,
+          checkInLocation: prefs.getString('checkInLocation'),
+          checkOutLocation: null,
+        );
+      } else {
+        currentState.value = AttendanceState.initial;
+        todayAttendance.value = null;
+      }
+    }
+  }
+
+  // Save attendance state to SharedPreferences, including optional detailed info
+  Future<void> _saveAttendanceStatus({
+    required bool checkedIn,
+    required bool checkedOut,
+    AttendanceRecord? record,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now().toIso8601String().split('T').first;
+      await prefs.setString('attendanceDate', today);
+      await prefs.setBool('hasCheckedIn', checkedIn);
+      await prefs.setBool('hasCheckedOut', checkedOut);
+
+      if (record != null) {
+        if (record.id != null) await prefs.setInt('attendanceId', record.id!);
+        if (record.checkIn != null) await prefs.setString('checkInTime', record.checkIn!);
+        if (record.checkOut != null) await prefs.setString('checkOutTime', record.checkOut!);
+        if (record.checkInLocation != null) await prefs.setString('checkInLocation', record.checkInLocation!);
+        if (record.checkOutLocation != null) await prefs.setString('checkOutLocation', record.checkOutLocation!);
+      }
+    } catch (e) {
+      print("Error saving attendance status: $e");
+    }
+  }
+
+  // Clear saved attendance data for a new day
+  Future<void> _resetAttendanceInPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('attendanceDate');
+    await prefs.remove('hasCheckedIn');
+    await prefs.remove('hasCheckedOut');
+    await prefs.remove('attendanceId');
+    await prefs.remove('checkInTime');
+    await prefs.remove('checkOutTime');
+    await prefs.remove('checkInLocation');
+    await prefs.remove('checkOutLocation');
   }
 
   Future<void> initializeCamera() async {
@@ -71,23 +151,22 @@ class AttendanceController extends GetxController {
 
       await cameraController!.initialize();
       isCameraInitialized.value = true;
+      print("Camera initialized: ${frontCamera.lensDirection}");
       currentState.value = AttendanceState.camera;
 
-      // Ensure location is available before starting countdown
-      if (currentLocation.value.isEmpty || currentLocation.value == 'Fetching location...') {
+      if (currentLocation.value.isEmpty ||
+          currentLocation.value == 'Fetching location...') {
         await getCurrentLocation();
       }
-
-      // Start countdown for auto-capture
-      startCountdown();
     } catch (e) {
-      errorMessage.value = 'Failed to initialize camera: $e';
+      errorMessage.value = 'Camera error: $e';
+      print("Camera init error: $e");
       currentState.value = AttendanceState.error;
     }
   }
 
   void startCountdown() {
-    countdown.value = 3; // Reduced to 3 seconds
+    countdown.value = 3;
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (countdown.value > 1) {
         countdown.value--;
@@ -103,48 +182,52 @@ class AttendanceController extends GetxController {
   }
 
   Future<void> startCheckIn() async {
+    if (isAttendanceComplete) {
+      Get.snackbar('Notice', 'Attendance is already complete for today.',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
     isCheckingIn.value = true;
     isCheckingOut.value = false;
+    errorMessage.value = '';
     currentState.value = AttendanceState.initial;
-
-    // Auto-fetch location before opening camera
-    await getCurrentLocation();
     await initializeCamera();
+    await getCurrentLocation();
+    startCountdown();
   }
 
   Future<void> startCheckOut() async {
-    // Check if we have a check-in record with ID
     if (todayAttendance.value?.id == null) {
-      Get.snackbar(
-        'Error',
-        'No check-in record found. Please check-in first.',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('Error', 'Check-in not found. Please check in first.',
+          backgroundColor: Colors.red, colorText: Colors.white);
+      return;
+    }
+
+    if (isAttendanceComplete) {
+      Get.snackbar('Notice', 'You have already checked out for today.',
+          backgroundColor: Colors.orange, colorText: Colors.white);
       return;
     }
 
     isCheckingIn.value = false;
     isCheckingOut.value = true;
+    errorMessage.value = '';
     currentState.value = AttendanceState.initial;
-
-    // Auto-fetch location before opening camera
-    await getCurrentLocation();
     await initializeCamera();
+    await getCurrentLocation();
+    startCountdown();
   }
 
   Future<void> captureAndCheckIn() async {
-    if (cameraController == null || !cameraController!.value.isInitialized) {
-      errorMessage.value = 'Camera not initialized';
-      currentState.value = AttendanceState.error;
+    if (!(cameraController?.value.isInitialized ?? false)) {
+      _handleError('Camera not ready');
       return;
     }
 
-    // Check if location is available
-    if (currentLocation.value.isEmpty || currentLocation.value == 'Location unavailable') {
-      errorMessage.value = 'Location not available. Please enable location services.';
-      currentState.value = AttendanceState.error;
+    if (currentLocation.value.isEmpty ||
+        currentLocation.value == 'Location unavailable') {
+      _handleError('Location not available');
       return;
     }
 
@@ -152,69 +235,54 @@ class AttendanceController extends GetxController {
       currentState.value = AttendanceState.processing;
       isLoading.value = true;
 
-      // Capture image
       final XFile imageFile = await cameraController!.takePicture();
 
-      // Perform check-in
       final response = await _apiService.checkIn(
         token: authController.token.value,
         image: File(imageFile.path),
         location: currentLocation.value,
         coordinates: currentCoordinates.value,
-        notes: 'Checked in on time',
+        notes: 'Checked in',
       );
 
       if (response.status == 'success') {
         todayAttendance.value = response.data;
         currentState.value = AttendanceState.checkedIn;
 
-        // Show success dialog with check-in details
+        await _saveAttendanceStatus(
+          checkedIn: true,
+          checkedOut: false,
+          record: response.data,
+        );
+
         _showSuccessDialog(
           'Check-in Successful!',
-          'Time: ${_formatTime(response.data?.checkIn ?? '')}',
+          'Time: ${formatTime(response.data?.checkIn ?? '')}',
           'Location: ${response.data?.checkInLocation ?? ''}',
           Icons.login,
           Colors.green,
         );
       } else {
-        throw Exception(response.message);
+        _handleError(response.message);
       }
     } catch (e) {
-      errorMessage.value = e.toString().replaceAll('Exception: ', '');
-      currentState.value = AttendanceState.error;
-      Get.snackbar(
-        'Check-in Failed',
-        errorMessage.value,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 4),
-      );
+      _handleError(e.toString());
     } finally {
       isLoading.value = false;
       isCheckingIn.value = false;
-      cameraController?.dispose();
+      await _disposeCamera();
     }
   }
 
   Future<void> captureAndCheckOut() async {
-    if (cameraController == null || !cameraController!.value.isInitialized) {
-      errorMessage.value = 'Camera not initialized';
-      currentState.value = AttendanceState.error;
+    if (!(cameraController?.value.isInitialized ?? false)) {
+      _handleError('Camera not ready');
       return;
     }
 
-    // Check if location is available
-    if (currentLocation.value.isEmpty || currentLocation.value == 'Location unavailable') {
-      errorMessage.value = 'Location not available. Please enable location services.';
-      currentState.value = AttendanceState.error;
-      return;
-    }
-
-    // Check if we have attendance ID
-    if (todayAttendance.value?.id == null) {
-      errorMessage.value = 'No check-in record found. Cannot check-out.';
-      currentState.value = AttendanceState.error;
+    if (currentLocation.value.isEmpty ||
+        currentLocation.value == 'Location unavailable') {
+      _handleError('Location not available');
       return;
     }
 
@@ -222,49 +290,43 @@ class AttendanceController extends GetxController {
       currentState.value = AttendanceState.processing;
       isLoading.value = true;
 
-      // Capture image
       final XFile imageFile = await cameraController!.takePicture();
 
-      // Perform check-out using the attendance ID
       final response = await _apiService.checkOut(
-        token:authController. token.value,
-        attendanceId: todayAttendance.value!.id!, // Pass the attendance ID
+        token: authController.token.value,
+        attendanceId: todayAttendance.value!.id!,
         image: File(imageFile.path),
         location: currentLocation.value,
         coordinates: currentCoordinates.value,
-        notes: 'Checked out successfully',
+        notes: 'Checked out',
       );
 
       if (response.status == 'success') {
         todayAttendance.value = response.data;
         currentState.value = AttendanceState.checkedOut;
 
-        // Show success dialog with check-out details
+        await _saveAttendanceStatus(
+          checkedIn: true,
+          checkedOut: true,
+          record: response.data,
+        );
+
         _showSuccessDialog(
           'Check-out Successful!',
-          'Time: ${_formatTime(response.data?.checkOut ?? '')}',
-          'Total Hours: ${_calculateWorkHours()}',
+          'Time: ${formatTime(response.data?.checkOut ?? '')}',
+          'Total: ${_calculateWorkHours()}',
           Icons.logout,
           Colors.red,
         );
       } else {
-        throw Exception(response.message);
+        _handleError(response.message);
       }
     } catch (e) {
-      errorMessage.value = e.toString().replaceAll('Exception: ', '');
-      currentState.value = AttendanceState.error;
-      Get.snackbar(
-        'Check-out Failed',
-        errorMessage.value,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 4),
-      );
+      _handleError('Checkout failed: $e');
     } finally {
       isLoading.value = false;
       isCheckingOut.value = false;
-      cameraController?.dispose();
+      await _disposeCamera();
     }
   }
 
@@ -273,137 +335,109 @@ class AttendanceController extends GetxController {
       isLocationLoading.value = true;
       currentLocation.value = 'Fetching location...';
 
-      // Check permissions
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          throw Exception('Location permissions are denied');
-        }
+      }
+      if (permission == LocationPermission.deniedForever ||
+          permission == LocationPermission.denied) {
+        throw Exception('Location permission denied');
       }
 
-      if (permission == LocationPermission.deniedForever) {
-        throw Exception('Location permissions are permanently denied. Please enable in settings.');
+      bool enabled = await Geolocator.isLocationServiceEnabled();
+      if (!enabled) {
+        throw Exception('Location services disabled');
       }
 
-      // Check if location services are enabled
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        throw Exception('Location services are disabled. Please enable location services.');
-      }
-
-      // Get current position with high accuracy
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
-      );
-
+          desiredAccuracy: LocationAccuracy.high);
       currentCoordinates.value = '${position.latitude},${position.longitude}';
 
-      // Get readable address
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
-
+      final placemarks =
+      await placemarkFromCoordinates(position.latitude, position.longitude);
       if (placemarks.isNotEmpty) {
-        Placemark place = placemarks[0];
-        String address = '';
-
-        if (place.name != null && place.name!.isNotEmpty) {
-          address += place.name!;
-        }
-        if (place.locality != null && place.locality!.isNotEmpty) {
-          if (address.isNotEmpty) address += ', ';
-          address += place.locality!;
-        }
-        if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
-          if (address.isNotEmpty) address += ', ';
-          address += place.administrativeArea!;
-        }
-
-        currentLocation.value = address.isNotEmpty ? address : 'Unknown Location';
+        final place = placemarks.first;
+        final address =
+            '${place.name}, ${place.locality}, ${place.administrativeArea}';
+        currentLocation.value = address;
       } else {
         currentLocation.value = 'Unknown Location';
       }
-
-      print('Location fetched: ${currentLocation.value}');
-      print('Coordinates: ${currentCoordinates.value}');
-
     } catch (e) {
       currentLocation.value = 'Location unavailable';
       currentCoordinates.value = '0.0,0.0';
-      print('Location error: $e');
-
-      Get.snackbar(
-        'Location Error',
-        e.toString(),
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 3),
-      );
+      Get.snackbar('Location Error', e.toString(),
+          backgroundColor: Colors.orange, colorText: Colors.white);
     } finally {
       isLocationLoading.value = false;
     }
   }
 
-  void _showSuccessDialog(String title, String time, String location, IconData icon, Color color) {
-    Get.dialog(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(width: 12),
-            Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(time, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            const SizedBox(height: 8),
-            Text(location, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('OK'),
+  void _handleError(String msg) {
+    errorMessage.value = msg;
+    currentState.value = AttendanceState.error;
+    Get.snackbar('Error', msg,
+        backgroundColor: Colors.red, colorText: Colors.white);
+  }
+
+  void _showSuccessDialog(
+      String title, String time, String location, IconData icon, Color color) {
+    Get.dialog(AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(title,
+                style: TextStyle(
+                    color: color, fontWeight: FontWeight.bold, fontSize: 18)),
           ),
         ],
       ),
-    );
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(time, style: const TextStyle(fontSize: 14)),
+          const SizedBox(height: 8),
+          Text(location,
+              style: const TextStyle(fontSize: 13, color: Colors.grey)),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Get.back(), child: const Text('OK')),
+      ],
+    ));
   }
 
-  String _formatTime(String timeString) {
-    if (timeString.isEmpty) return '--:--';
+  Future<void> _disposeCamera() async {
     try {
-      DateTime dateTime = DateTime.parse(timeString).toLocal(); // 🔥 Convert to local time
-      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-    } catch (e) {
+      await cameraController?.dispose();
+      cameraController = null;
+      isCameraInitialized.value = false;
+    } catch (_) {}
+  }
+
+  String formatTime(String? timeString) {
+    if (timeString == null || timeString.isEmpty) return '--:--';
+    try {
+      final dateTime = DateTime.parse(timeString).toLocal();
+      final hour = dateTime.hour.toString().padLeft(2, '0');
+      final minute = dateTime.minute.toString().padLeft(2, '0');
+      return '$hour:$minute';
+    } catch (_) {
       return '--:--';
     }
   }
-
 
   String _calculateWorkHours() {
-    if (todayAttendance.value?.checkIn == null || todayAttendance.value?.checkOut == null) {
-      return '--:--';
-    }
-
     try {
-      DateTime checkIn = DateTime.parse(todayAttendance.value!.checkIn!);
-      DateTime checkOut = DateTime.parse(todayAttendance.value!.checkOut!);
-
-      Duration difference = checkOut.difference(checkIn);
-      int hours = difference.inHours;
-      int minutes = difference.inMinutes.remainder(60);
-
-      return '${hours}h ${minutes}m';
-    } catch (e) {
+      final checkIn = DateTime.parse(todayAttendance.value!.checkIn!);
+      final checkOut = DateTime.parse(todayAttendance.value!.checkOut!);
+      final diff = checkOut.difference(checkIn);
+      return '${diff.inHours}h ${diff.inMinutes.remainder(60)}m';
+    } catch (_) {
       return '--:--';
     }
   }
@@ -414,13 +448,14 @@ class AttendanceController extends GetxController {
     isCheckingIn.value = false;
     isCheckingOut.value = false;
     countdownTimer?.cancel();
-    cameraController?.dispose();
+    _disposeCamera();
   }
 
-
-
-  // Getters for UI state
   bool get canCheckIn => todayAttendance.value?.checkIn == null;
-  bool get canCheckOut => todayAttendance.value?.checkIn != null && todayAttendance.value?.checkOut == null;
-  bool get isAttendanceComplete => todayAttendance.value?.checkIn != null && todayAttendance.value?.checkOut != null;
+  bool get canCheckOut =>
+      todayAttendance.value?.checkIn != null &&
+          todayAttendance.value?.checkOut == null;
+  bool get isAttendanceComplete =>
+      todayAttendance.value?.checkIn != null &&
+          todayAttendance.value?.checkOut != null;
 }

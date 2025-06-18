@@ -2,42 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kredipal/widgets/custom_app_bar.dart';
 import '../controller/attendance_history_controller.dart';
-import '../models/attendance_history_model.dart';
 
 class AttendanceHistoryScreen extends StatelessWidget {
   const AttendanceHistoryScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final AttendanceHistoryController controller = Get.put(AttendanceHistoryController());
+    final AttendanceHistoryController controller =
+    Get.put(AttendanceHistoryController());
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: const CustomAppBar(title: 'Attendance History'),
       body: Obx(() {
         if (controller.isLoading.value && controller.records.isEmpty) {
-          return _buildLoadingView();
+          return const Center(child: CircularProgressIndicator());
         }
 
-        if (controller.errorMessage.value.isNotEmpty && controller.records.isEmpty) {
-          return _buildErrorView(controller);
+        if (controller.errorMessage.value.isNotEmpty &&
+            controller.records.isEmpty) {
+          return Center(child: Text(controller.errorMessage.value));
         }
 
         return RefreshIndicator(
-          onRefresh: () => controller.fetchAttendanceHistory(),
-          color: const Color(0xFF1E293B),
+          onRefresh: controller.fetchAttendanceHistory,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               children: [
-                // Summary Header
-                _buildSummaryHeader(controller),
-
-                // Filter Section
-                _buildFilterSection(controller),
-
-                // Records List
-                _buildRecordsList(controller),
+                _buildSummary(controller, screenWidth),
+                SizedBox(height: screenHeight * 0.02),
+                _buildFilterTabs(controller, screenWidth),
+                SizedBox(height: screenHeight * 0.02),
+                _buildRecordsList(controller, screenWidth, screenHeight),
               ],
             ),
           ),
@@ -46,543 +45,246 @@ class AttendanceHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingView() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildSummary(AttendanceHistoryController controller, double screenWidth) {
+    final summary = controller.summary.value;
+    if (summary == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsets.all(screenWidth * 0.04),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1E293B)),
-            strokeWidth: 3,
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Loading attendance history...',
-            style: TextStyle(
-              fontSize: 16,
-              color: Color(0xFF64748B),
-            ),
-          ),
+          _buildStatCard("Total", summary.totalDays ?? 0, Colors.blue, screenWidth),
+          SizedBox(width: screenWidth * 0.03),
+          _buildStatCard("Present", summary.present ?? 0, Colors.green, screenWidth),
+          SizedBox(width: screenWidth * 0.03),
+          _buildStatCard("Absent", summary.absent ?? 0, Colors.red, screenWidth),
         ],
       ),
     );
   }
 
-  Widget _buildErrorView(AttendanceHistoryController controller) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.error_outline_rounded,
-                size: 64,
-                color: Colors.red,
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Failed to load attendance history',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              controller.errorMessage.value,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Color(0xFF64748B),
-              ),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: controller.fetchAttendanceHistory,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Try Again'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1E293B),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryHeader(AttendanceHistoryController controller) {
-    if (controller.summary.value == null) return const SizedBox.shrink();
-
-    final summary = controller.summary.value!;
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1E293B).withOpacity(0.3),
-            spreadRadius: 0,
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Attendance Overview',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Stats Row
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Total Days',
-                  summary.totalDays.toString(),
-                  Icons.calendar_month_rounded,
-                  const Color(0xFF3B82F6),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  'Present',
-                  summary.present.toString(),
-                  Icons.check_circle_rounded,
-                  const Color(0xFF10B981),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  'Absent',
-                  summary.absent.toString(),
-                  Icons.cancel_rounded,
-                  const Color(0xFFEF4444),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Attendance Percentage
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.white70,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterSection(AttendanceHistoryController controller) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Obx(() => Row(
-        children: [
-          _buildFilterTab('All', 'all', controller),
-          _buildFilterTab('Completed', 'completed', controller),
-          _buildFilterTab('Incomplete', 'incomplete', controller),
-        ],
-      )),
-    );
-  }
-
-  Widget _buildFilterTab(String label, String value, AttendanceHistoryController controller) {
-    final isSelected = controller.selectedFilter.value == value;
-
+  Widget _buildStatCard(String title, int count, Color color, double screenWidth) {
     return Expanded(
-      child: GestureDetector(
-        onTap: () => controller.updateFilter(value),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.orange : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              color: isSelected ? Colors.white : const Color(0xFF64748B),
+      child: Container(
+        padding: EdgeInsets.all(screenWidth * 0.04),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(screenWidth * 0.03),
+        ),
+        child: Column(
+          children: [
+            Text(
+              title,
+              style: TextStyle(fontSize: screenWidth * 0.035, color: color),
             ),
-          ),
+            SizedBox(height: screenWidth * 0.01),
+            Text(
+              count.toString(),
+              style: TextStyle(
+                fontSize: screenWidth * 0.045,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildRecordsList(AttendanceHistoryController controller) {
-    final filteredRecords = controller.filteredRecords;
+  Widget _buildFilterTabs(AttendanceHistoryController controller, double screenWidth) {
+    final filters = {
+      'All': 'all',
+      'Completed': 'completed',
+      'Incomplete': 'incomplete'
+    };
 
-    if (filteredRecords.isEmpty) {
-      return Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              spreadRadius: 0,
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF64748B).withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.inbox_rounded,
-                size: 48,
-                color: Color(0xFF64748B),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'No records found',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: filters.entries.map((entry) {
+          final isSelected = controller.selectedFilter.value == entry.value;
+          return Flexible(
+            child: GestureDetector(
+              onTap: () => controller.updateFilter(entry.value),
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
+                padding: EdgeInsets.symmetric(vertical: screenWidth * 0.025),
+                constraints: BoxConstraints(minWidth: screenWidth * 0.25), // Ensure minimum width
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.orange : Colors.white,
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                  border: Border.all(color: Colors.orange),
+                ),
+                child: Center(
+                  child: Text(
+                    entry.key,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.white : Colors.orange,
+                      fontSize: screenWidth * 0.035,
+                    ),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'No attendance records match the selected filter',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildRecordsList(
+      AttendanceHistoryController controller, double screenWidth, double screenHeight) {
+    final records = controller.filteredRecords;
+
+    if (records.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.all(screenWidth * 0.08),
+        child: const Text("No attendance records found."),
       );
     }
 
     return ListView.builder(
+      itemCount: records.length,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16),
-      itemCount: filteredRecords.length,
       itemBuilder: (context, index) {
-        final record = filteredRecords[index];
-        return _buildRecordCard(record, controller);
-      },
-    );
-  }
-
-  Widget _buildRecordCard(AttendanceRecord record, AttendanceHistoryController controller) {
-    final isComplete = record.checkOut != null;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+        final record = records[index];
+        return Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.04,
+            vertical: screenWidth * 0.02,
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          child: Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(screenWidth * 0.03),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(screenWidth * 0.04),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    controller.formatDateWithDay(record.date),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: screenWidth * 0.04,
+                    ),
+                  ),
+                  SizedBox(height: screenWidth * 0.01),
+                  Text(
+                    record.employeeName,
+                    style: TextStyle(fontSize: screenWidth * 0.035),
+                  ),
+                  const Divider(),
+                  Row(
                     children: [
-                      Text(
-                        controller.formatDateWithDay(record.date),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
+                      Expanded(
+                        child: _buildTimeInfo(
+                          icon: Icons.login_rounded,
+                          label: "Check-in",
+                          time: controller.formatTime(record.checkIn),
+                          imageUrl: record.checkinImage,
+                          screenWidth: screenWidth,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        record.employeeName,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF64748B),
+                      SizedBox(width: screenWidth * 0.04),
+                      Expanded(
+                        child: _buildTimeInfo(
+                          icon: Icons.logout_rounded,
+                          label: "Check-out",
+                          time: controller.formatTime(record.checkOut),
+                          imageUrl: record.checkoutImage,
+                          screenWidth: screenWidth,
                         ),
                       ),
                     ],
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: controller.getStatusColor(record).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: controller.getStatusColor(record).withOpacity(0.3),
+                  if (record.checkIn != null && record.checkOut != null)
+                    Padding(
+                      padding: EdgeInsets.only(top: screenWidth * 0.03),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: screenWidth * 0.05,
+                            color: Colors.blue,
+                          ),
+                          SizedBox(width: screenWidth * 0.015),
+                          Text(
+                            "Total: ${controller.calculateWorkTime(record.checkIn, record.checkOut)}",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: screenWidth * 0.035,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    controller.getStatusText(record),
-                    style: TextStyle(
-                      color: controller.getStatusColor(record),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Time Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTimeCard(
-                    'Check-in',
-                    controller.formatTime(record.checkIn),
-                    Icons.login_rounded,
-                    const Color(0xFF10B981),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildTimeCard(
-                    'Check-out',
-                    controller.formatTime(record.checkOut),
-                    Icons.logout_rounded,
-                    const Color(0xFFEF4444),
-                  ),
-                ),
-              ],
-            ),
-
-            if (isComplete) ...[
-              const SizedBox(height: 12),
-              Center(
-                child: _buildTimeCard(
-                  'Total Time',
-                  controller.calculateWorkTime(record.checkIn, record.checkOut),
-                  Icons.access_time_rounded,
-                  const Color(0xFF3B82F6),
-                ),
+                ],
               ),
-            ],
-
-            // Location and Notes
-            if (record.checkInLocation.isNotEmpty || record.notes.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              const Divider(color: Color(0xFFE2E8F0)),
-              const SizedBox(height: 16),
-
-              if (record.checkInLocation.isNotEmpty) ...[
-                _buildInfoRow(
-                  Icons.location_on_rounded,
-                  'Check-in Location',
-                  record.checkInLocation,
-                  const Color(0xFF3B82F6),
-                ),
-                const SizedBox(height: 12),
-              ],
-
-              if (record.checkOutLocation != null && record.checkOutLocation!.isNotEmpty) ...[
-                _buildInfoRow(
-                  Icons.location_on_rounded,
-                  'Check-out Location',
-                  record.checkOutLocation!,
-                  const Color(0xFF3B82F6),
-                ),
-                const SizedBox(height: 12),
-              ],
-
-              if (record.notes.isNotEmpty) ...[
-                _buildInfoRow(
-                  Icons.note_rounded,
-                  'Notes',
-                  record.notes,
-                  const Color(0xFF64748B),
-                ),
-              ],
-            ],
-          ],
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildTimeCard(String label, String time, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 20),
+  Widget _buildTimeInfo({
+    required IconData icon,
+    required String label,
+    required String time,
+    String? imageUrl,
+    required double screenWidth,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Icon(icon, color: Colors.grey, size: screenWidth * 0.06),
+        SizedBox(height: screenWidth * 0.01),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: screenWidth * 0.03,
+            color: Colors.grey,
           ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF64748B),
-            ),
+        ),
+        SizedBox(height: screenWidth * 0.005),
+        Text(
+          time,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: screenWidth * 0.035,
           ),
-          const SizedBox(height: 4),
-          Text(
-            time,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+        ),
+        if (imageUrl != null) ...[
+          SizedBox(height: screenWidth * 0.015),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(screenWidth * 0.015),
+            child: Image.network(
+              imageUrl,
+              height: screenWidth * 0.15,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  Icon(Icons.broken_image, size: screenWidth * 0.1),
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return SizedBox(
+                  height: screenWidth * 0.15,
+                  child: Center(
+                    child: CircularProgressIndicator(strokeWidth: screenWidth * 0.005),
+                  ),
+                );
+              },
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value, Color iconColor) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Icon(icon, size: 16, color: iconColor),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF64748B),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
