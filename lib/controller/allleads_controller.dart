@@ -125,32 +125,20 @@ class AllLeadsController extends GetxController {
   }
 
   String formatCurrency(dynamic amount) {
-    if (amount == null) return '₹0';
-
     try {
-      double value;
+      double parsedAmount = 0;
 
       if (amount is int) {
-        value = amount.toDouble();
-      } else if (amount is double) {
-        value = amount;
+        parsedAmount = amount.toDouble();
       } else if (amount is String) {
-        value = double.parse(amount);
+        parsedAmount = double.tryParse(amount) ?? 0;
       } else {
-        return '₹0';
+        parsedAmount = 0;
       }
 
-      if (value >= 10000000) {
-        return '₹${(value / 10000000).toStringAsFixed(1)}Cr';
-      } else if (value >= 100000) {
-        return '₹${(value / 100000).toStringAsFixed(1)}L';
-      } else if (value >= 1000) {
-        return '₹${(value / 1000).toStringAsFixed(1)}K';
-      } else {
-        return '₹${value.toStringAsFixed(0)}';
-      }
-    } catch (e) {
-      return '₹0';
+      return '₹${parsedAmount.toStringAsFixed(2)}';
+    } catch (_) {
+      return '₹0.00';
     }
   }
 

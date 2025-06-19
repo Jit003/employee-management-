@@ -396,13 +396,13 @@ class TotalLeads {
 
 class DisbursedLeads {
   int? count;
-  int? totalAmount;
+  String? totalAmount;
 
   DisbursedLeads({this.count, this.totalAmount});
 
   DisbursedLeads.fromJson(Map<String, dynamic> json) {
     count = json['count'];
-    totalAmount = json['total_amount'];
+    totalAmount = json['total_amount'].toString();
   }
 
   Map<String, dynamic> toJson() {

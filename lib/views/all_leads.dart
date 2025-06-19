@@ -136,9 +136,10 @@ class AllLeadsScreen extends StatelessWidget {
         case 'disbursed':
           count = aggregates.disbursedLeads?.count ?? 0;
           amount = controller.formatCurrency(
-              (aggregates.disbursedLeads?.totalAmount ?? 0).toString() // ✅ convert int to String
+              aggregates.disbursedLeads?.totalAmount ?? '0'
           );
           break;
+
         case 'rejected':
           count = controller.filteredLeads.where(
                 (lead) => lead.status?.toLowerCase() == 'rejected',
