@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kredipal/widgets/add_lead_widget/extra_info.dart';
 import 'package:kredipal/widgets/add_lead_widget/voice_record_section.dart';
-
 import '../../widgets/add_lead_widget/business_info_section.dart';
 import '../../widgets/add_lead_widget/contact_info_section.dart';
 import '../../widgets/add_lead_widget/lead_details_section.dart';

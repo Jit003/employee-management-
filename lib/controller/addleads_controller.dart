@@ -11,7 +11,8 @@ import 'login-controller.dart';
 
 class AddLeadsController extends GetxController {
   final AllLeadsController allLeadsController = Get.find<AllLeadsController>();
-  final DashboardController dashboardController = Get.find<DashboardController>();
+  final DashboardController dashboardController =
+      Get.find<DashboardController>();
 
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
@@ -65,6 +66,20 @@ class AddLeadsController extends GetxController {
     'Sundargarh',
   ];
 
+  // Controller
+  final RxList<String> selectedBanks = <String>[].obs;
+
+  List<String> availableBanks = [
+    'HDFC Bank',
+    'ICICI Bank',
+    'Axis Bank',
+    'SBI',
+    'Kotak Mahindra',
+    'Yes Bank',
+    'Bank of Baroda',
+    'IndusInd Bank',
+  ];
+
   List<String> successPer = ['50', '60', '70', '80', '90', '100'];
   List<String> expectedMonth = [
     'January',
@@ -89,46 +104,64 @@ class AddLeadsController extends GetxController {
 
   final isLoading = false.obs;
 
-
-
-
   void setDate(DateTime date) {
     selectedDate.value = date;
   }
 
   Future<void> createLead() async {
-
     isLoading.value = true;
 
     try {
-      final body = {
-        "name": nameController.text.trim(),
-        "phone": phoneController.text.trim(),
-        // "dob": selectedDate.value != null
-        //     ? DateFormat("yyyy-MM-dd").format(selectedDate.value!)
-        //     : null,
-        "location": selectedLocation.value,
-        "company_name": companyNameController.text.trim(),
-        "lead_amount":
-            (double.tryParse(leadAmountController.text) ?? 0.0).toString(),
-        "salary": (double.tryParse(salaryController.text) ?? 0.0).toString(),
-        "success_percentage":
-            (int.tryParse(selectedSuccessRatio.value) ?? 0).toString(),
-        "expected_month": selectedMonth.value,
-        "remarks": remarksController.text.trim(),
-        "status": "pending",
+      Map<String, dynamic> body = {
         "lead_type": leadTypeValue.value,
+        "status": "pending",
         "team_lead_id": authController.userData['team_lead_id'].toString(),
       };
 
-      print("Team Lead ID: ${authController.userData['team_lead_id']}");
+      final leadType = leadTypeValue.value;
 
+      if (leadType == 'personal_loan' || leadType == 'home_loan') {
+        body.addAll({
+          "name": nameController.text.trim(),
+          "phone": phoneController.text.trim(),
+          "email": emailController.text.trim(),
+          "location": selectedLocation.value,
+          "company_name": companyNameController.text.trim(),
+          "lead_amount": (double.tryParse(leadAmountController.text) ?? 0.0).toString(),
+          "salary": (double.tryParse(salaryController.text) ?? 0.0).toString(),
+          "success_percentage": (int.tryParse(selectedSuccessRatio.value) ?? 0).toString(),
+          "expected_month": selectedMonth.value,
+          "remarks": remarksController.text.trim(),
+        });
 
-      if (selectedDate.value != null) {
-        body["dob"] = DateFormat("yyyy-MM-dd").format(selectedDate.value!);
+        if (selectedDate.value != null) {
+          body["dob"] = DateFormat("yyyy-MM-dd").format(selectedDate.value!);
+        }
       }
-      if(emailController.text != null){
-        body['email'] = emailController.text.trim();
+
+      else if (leadType == 'business_loan') {
+        body.addAll({
+          "business_name": companyNameController.text.trim(),
+          "phone": phoneController.text.trim(),
+          "email": emailController.text.trim(),
+          "location": selectedLocation.value,
+          "lead_amount": (double.tryParse(leadAmountController.text) ?? 0.0).toString(),
+          "turnover_amount": (double.tryParse(salaryController.text) ?? 0.0).toString(), // assuming salaryController used as turnover input
+          "vintage_year": (selectedDate.value?.year != null)
+              ? (DateTime.now().year - selectedDate.value!.year).toString()
+              : "0",
+          "success_percentage": (int.tryParse(selectedSuccessRatio.value) ?? 0).toString(),
+          "remarks": remarksController.text.trim(),
+        });
+      }
+
+      else if (leadType == 'creditcard_loan') {
+        body.addAll({
+          "name": nameController.text.trim(),
+          "phone": phoneController.text.trim(),
+          "email": emailController.text.trim(),
+          "bank_name": selectedBanks.join(', ') // Convert list to string like: "HDFC, ICICI"
+        });
       }
 
       print("Sending lead data: $body");
@@ -141,20 +174,19 @@ class AddLeadsController extends GetxController {
 
       Get.snackbar("Success", response['message'],
           backgroundColor: Colors.green, colorText: Colors.white);
-      clearForm();
 
+      clearForm(leadType: leadTypeValue.value);
       Get.toNamed(AppRoutes.leadSavedSuccess);
       allLeadsController.fetchAllLeads();
       dashboardController.loadDashboardData();
     } catch (e) {
       print("Error during createLead: $e");
-      Get.snackbar(e.toString(), "Failed to save lead",
+      Get.snackbar("Error", "Failed to save lead: $e",
           backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
   }
-
 
   void clearForm({String leadType = 'personal_loan'}) {
     nameController.clear();
@@ -171,7 +203,7 @@ class AddLeadsController extends GetxController {
     selectedMonth.value = '';
     selectedLocation.value = '';
     voiceFilePath.value = '';
-    voiceRecorderController.onClose(); // you can clear your recorded file path also if needed
+    voiceRecorderController
+        .onClose(); // you can clear your recorded file path also if needed
   }
-
 }
